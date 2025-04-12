@@ -2,19 +2,19 @@ let game;
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,           // 기준 가로
-  height: 450,          // 기준 세로 (16:9 비율)
+  width: 600,
+  height: 600,
   backgroundColor: '#1e1e1e',
   scale: {
-    mode: Phaser.Scale.FIT, // 비율 유지하면서 최대한 꽉 채움
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     max: {
-      width: 960,
-      height: 540,
+      width: 800,
+      height: 800,
     },
     min: {
-      width: 640,
-      height: 360,
+      width: 400,
+      height: 400,
     },
   },
   physics: {
