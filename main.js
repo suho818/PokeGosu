@@ -3,15 +3,15 @@ const screenWidth = Math.max(window.innerWidth, 800);
 const screenHeight = Math.max(window.innerHeight, 800);
 const config = {
   type: Phaser.AUTO,
-  width: screenWidth,
-  height: screenHeight,
+  width: Math.min(screenHeight,screenWidth),
+  height: Math.min(screenHeight,screenWidth),
   backgroundColor: '#1e1e1e',
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     max: {
-      width: 800,
-      height: 800
+      width: Math.min(screenHeight,screenWidth),
+      height: Math.min(screenHeight,screenWidth)
     },
     min: {
       width: 400,
