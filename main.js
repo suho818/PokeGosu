@@ -3,15 +3,15 @@ const screenWidth = Math.min(window.innerWidth, 800);
 const screenHeight = Math.min(window.innerHeight, 800);
 const config = {
   type: Phaser.AUTO,
-  width: 600,
-  height: 600,
+  width: Math.min(screenWidth, screenHeight),
+  height: Math.min(screenWidth, screenHeight),
   backgroundColor: '#1e1e1e',
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     max: {
-      width: screenWidth,
-      height: screenHeight
+      width: 800,
+      height: 800
     },
     min: {
       width: 400,
@@ -103,3 +103,16 @@ btn.onclick = () => {
   btn.remove();
   game = new Phaser.Game(config);
 };
+
+function isMobileDevice() {
+  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+
+
+if (isMobileDevice()) {
+  const shortEdge = Math.min(window.innerWidth, window.innerHeight);
+  gameWidth = shortEdge;
+  gameHeight = shortEdge;
+}
+
