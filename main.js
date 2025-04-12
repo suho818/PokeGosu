@@ -68,14 +68,22 @@ function update(time, delta) {
   const speed = 200;
   player.setVelocity(0);
 
-  if (cursors.left.isDown) player.setVelocityX(-speed);
-  if (cursors.right.isDown) player.setVelocityX(speed);
-  if (cursors.up.isDown) player.setVelocityY(-speed);
-  if (cursors.down.isDown) player.setVelocityY(speed);
+  if (isMobileDevice() && joystick.active) {
+    const norm = Math.hypot(joystick.delta.x, joystick.delta.y);
+    if (norm > 10) {
+      const vx = (joystick.delta.x / norm) * speed;
+      const vy = (joystick.delta.y / norm) * speed;
+      player.setVelocity(vx, vy);
+    }
+  } else {
+    if (cursors.left.isDown) player.setVelocityX(-speed);
+    if (cursors.right.isDown) player.setVelocityX(speed);
+    if (cursors.up.isDown) player.setVelocityY(-speed);
+    if (cursors.down.isDown) player.setVelocityY(speed);
+  }
 
   timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
 }
-
 function spawnObstacle() {
   const side = Phaser.Math.Between(0, 3);
   let x, y;
@@ -97,11 +105,59 @@ function spawnObstacle() {
   obstacle.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 }
 
+let joystick = {
+  active: false,
+  origin: { x: 0, y: 0 },
+  delta: { x: 0, y: 0 }
+};
+
+const stick = document.getElementById('joystickStick');
+const base = document.getElementById('joystickBase');
+const container = document.getElementById('joystickContainer');
+
+function setupJoystick() {
+  if (!isMobileDevice()) return;
+
+  container.style.display = 'block';
+
+  base.addEventListener('touchstart', (e) => {
+    joystick.active = true;
+    const touch = e.touches[0];
+    joystick.origin = { x: touch.clientX, y: touch.clientY };
+  });
+
+  base.addEventListener('touchmove', (e) => {
+    if (!joystick.active) return;
+    const touch = e.touches[0];
+    joystick.delta = {
+      x: touch.clientX - joystick.origin.x,
+      y: touch.clientY - joystick.origin.y
+    };
+
+    // 제한 반경 30px
+    const maxDist = 30;
+    const angle = Math.atan2(joystick.delta.y, joystick.delta.x);
+    const dist = Math.min(maxDist, Math.hypot(joystick.delta.x, joystick.delta.y));
+    stick.style.left = `${30 + Math.cos(angle) * dist}px`;
+    stick.style.top = `${30 + Math.sin(angle) * dist}px`;
+  });
+
+  base.addEventListener('touchend', () => {
+    joystick.active = false;
+    joystick.delta = { x: 0, y: 0 };
+    stick.style.left = '30px';
+    stick.style.top = '30px';
+  });
+}
+
+
+
 // 버튼 클릭 시 게임 시작
 const btn = document.getElementById('startButton');
 btn.onclick = () => {
   btn.remove();
   game = new Phaser.Game(config);
+  setupJoystick();
 };
 
 
