@@ -1,5 +1,6 @@
 let game;
-
+const screenWidth = Math.min(window.innerWidth, 800);
+const screenHeight = Math.min(window.innerHeight, 800);
 const config = {
   type: Phaser.AUTO,
   width: 600,
@@ -9,8 +10,8 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     max: {
-      width: 800,
-      height: 800,
+      width: screenWidth,
+      height: screenHeight
     },
     min: {
       width: 400,
