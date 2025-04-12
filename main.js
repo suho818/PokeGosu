@@ -2,9 +2,21 @@ let game;
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 800,           // 기준 가로
+  height: 450,          // 기준 세로 (16:9 비율)
   backgroundColor: '#1e1e1e',
+  scale: {
+    mode: Phaser.Scale.FIT, // 비율 유지하면서 최대한 꽉 채움
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    max: {
+      width: 960,
+      height: 540,
+    },
+    min: {
+      width: 640,
+      height: 360,
+    },
+  },
   physics: {
     default: 'arcade',
     arcade: {
