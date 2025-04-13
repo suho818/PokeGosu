@@ -10,6 +10,10 @@ body {
   
   canvas {
     display: block;
+      position: absolute;
+  top: 5%;  /* 👈 살짝 위로 올림 */
+  left: 50%;
+  transform: translateX(-50%);
     margin: 0 auto;
     z-index: 0;
       pointer-events: auto;
