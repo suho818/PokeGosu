@@ -84,7 +84,7 @@ function create() {
     location.reload();
   });
 
-  timerText = this.add.text(1100, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
+  timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
   startTime = this.time.now;
 
   // 기본 패턴: 1초마다
