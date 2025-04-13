@@ -8,7 +8,7 @@ const config = {
   backgroundColor: '#fffdd0',
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoCenter: Phaser.Scale.NO_CENTER,
     max: {
       width: Math.min(screenHeight,screenWidth),
       height: Math.min(screenHeight,screenWidth)
