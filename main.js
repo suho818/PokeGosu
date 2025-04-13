@@ -279,4 +279,12 @@ btn.onclick = () => {
   setupJoystick();
 };
 
+// 드래그 방지
+document.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('dragstart', (e) => {
+  e.preventDefault();
+});
 
