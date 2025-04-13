@@ -69,7 +69,7 @@ let patternEvents = [];
 
 function create() {
   player = this.physics.add.image(400, 300, player_img.right);
-  player.setScale(0.15);
+  player.setScale(0.12);
   player.setSize(220, 510);
   player.setOffset(285,265);
   player.setCollideWorldBounds(true);
