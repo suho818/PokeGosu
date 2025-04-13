@@ -46,6 +46,10 @@ function preload() {
   this.load.image('emonga-right', 'image/emonga-right.png');
   this.load.image('pichu-left', 'image/pichu-left.png');
   this.load.image('pichu-right', 'image/pichu-right.png');
+  this.load.spritesheet('pichu', 'image/pichu-spritesheet.png', {
+    frameWidth:370,
+    frameHeight:400,
+  });
 
   this.load.image('obstacle-left', 'image/cuteghost9.png');
   this.load.image('obstacle-right', 'image/cuteghost-right9.png');
@@ -68,10 +72,18 @@ const patterns = {
 let patternEvents = [];
 
 function create() {
-  player = this.physics.add.image(400, 300, player_img.right);
-  player.setScale(0.1);
-  player.setSize(220, 510);
-  player.setOffset(285,265);
+  this.anims.create({
+    key: 'pichu',
+    frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 47 }),
+    frameRate: 24,
+    repeat: -1
+  })
+
+  player = this.physics.add.sprite(200, 200, 'pichu');
+  player.anims.play('pichu');
+  player.setScale(0.2);
+  player.setSize(170, 250);
+  player.setOffset(100,130);
   player.setCollideWorldBounds(true);
 
   cursors = this.input.keyboard.createCursorKeys();
@@ -83,6 +95,8 @@ function create() {
     alert('Game Over!');
     location.reload();
   });
+
+ 
 
   timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
   startTime = this.time.now;
@@ -115,12 +129,41 @@ function create() {
   });
 
 }
-let lastDir = 'right'; // 기본 방향
+
+function setPichuAnimationSpeed(player, targetFrameRate) {
+  const animKey = 'pichu';
+
+  const currentAnim = player.anims.currentAnim;
+  const currentFrame = player.anims.currentFrame;
+
+  // 애니메이션이 아직 재생된 적 없거나 다른 키라면 play만 실행
+  if (!currentAnim || currentAnim.key !== animKey || !currentFrame) {
+    player.anims.play({ key: animKey, frameRate: targetFrameRate }, true);
+    return;
+  }
+
+  // 현재 프레임 인덱스 저장
+  const currentIndex = currentFrame.index;
+
+  // 안전하게 프레임 배열 존재 여부 확인
+  player.anims.play({ key: animKey, frameRate: targetFrameRate }, true);
+
+  const newAnim = player.anims.currentAnim;
+  const frames = newAnim?.frames;
+
+  if (frames && frames[currentIndex]) {
+    player.anims.setCurrentFrame(frames[currentIndex]);
+  }
+}
+
+
+let lastDir = 'left'; // 기본 방향
 
 function update(time, delta) {
   const speed = 400;
   player.setVelocity(0);
-  
+  let vertical = 0;
+  let horizontal = 0;
 
   if (isMobileDevice() && joystick.active) {
     const norm = Math.hypot(joystick.delta.x, joystick.delta.y);
@@ -128,13 +171,11 @@ function update(time, delta) {
       const vx = (joystick.delta.x / norm) * speed;
       const vy = (joystick.delta.y / norm) * speed;
       if (vx < 0 && lastDir !== 'left'){
-        player.setTexture(player_img.left);
-        
+        player.setFlipX(false);  // 왼쪽 바라보게
         lastDir = 'left';
       }
       else if (vx > 0 && lastDir !== 'right') {
-        player.setTexture(player_img.right);
-        
+        player.setFlipX(true);  // 오른쪽 바라보게        
         lastDir = 'right';
 
       }
@@ -142,23 +183,32 @@ function update(time, delta) {
     }
   } else {
     if (cursors.left.isDown) {
-      player.setVelocityX(-speed);
+      vertical = -1;
       if (lastDir !== 'left'){
-        player.setTexture(player_img.left);
+        player.setFlipX(false);  // 왼쪽 바라보게
         lastDir = 'left';
       }
     }
     if (cursors.right.isDown) {
-      player.setVelocityX(speed);
+      vertical = 1;
       if (lastDir !== 'right'){
-        player.setTexture(player_img.right);
+        player.setFlipX(true);  // 오른쪽 바라보게
         lastDir = 'right';
       }
     }
-    if (cursors.up.isDown) player.setVelocityY(-speed);
-    if (cursors.down.isDown) player.setVelocityY(speed);
+    if (cursors.up.isDown) horizontal = -1;
+    if (cursors.down.isDown) horizontal = 1;
+    let reci_norm = 0;
+    if (horizontal != 0 || vertical !=0)
+      {reci_norm = 1/Math.sqrt(horizontal**2 + vertical**2);
+      }
+    player.setVelocity(reci_norm * speed * vertical, reci_norm * speed * horizontal);
   }
-
+  if (player.body.velocity.length() > 5){
+    setPichuAnimationSpeed(player, 48);
+  } else {
+    //setPichuAnimationSpeed(player, 24);
+  }
   timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
 }
 function spawnObstacleTowardPlayer() {
