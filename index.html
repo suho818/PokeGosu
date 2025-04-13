@@ -2,53 +2,19 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>쥭림고수</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-  <style>
-    body { margin: 0; }
-    canvas { display: block; margin: 0 auto; }
-    #startButton {
-      position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 24px;
-      padding: 10px 20px;
-    }
-    #joystickContainer {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  width: 100px;
-  height: 100px;
-  z-index: 100;
-  touch-action: none;
-}
-
-#joystickBase {
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-  position: relative;
-}
-
-#joystickStick {
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 50%;
-  position: absolute;
-  left: 30px;
-  top: 30px;
-}
-  </style>
+  <link rel="stylesheet" href="style.css"> <!-- 👈 외부 CSS 연결 -->
 </head>
 <body>
   <button id="startButton">게임 시작</button>
   <div id="joystickContainer" style="display:none;">
-  <div id="joystickBase">
-    <div id="joystickStick"></div>
+    <div id="joystickBase">
+      <div id="joystickStick"></div>
+    </div>
   </div>
-</div>
   <script src="main.js"></script>
 </body>
 </html>
