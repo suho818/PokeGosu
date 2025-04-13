@@ -23,9 +23,9 @@ body {
   
   #joystickContainer {
     position: absolute;
-    bottom: 10%;
+    bottom: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%,120%) translate(0,50vmin);
     width: 20vmin;
     height: 20vmin;
     max-width: 100px;

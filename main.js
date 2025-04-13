@@ -3,8 +3,8 @@ const screenWidth = Math.max(window.innerWidth, 800);
 const screenHeight = Math.max(window.innerHeight, 800);
 const config = {
   type: Phaser.AUTO,
-  width: 600,//Math.min(screenHeight,screenWidth),
-  height: 600,//Math.min(screenHeight,screenWidth),
+  width: 1200,//Math.min(screenHeight,screenWidth),
+  height: 1200,//Math.min(screenHeight,screenWidth),
   backgroundColor: '#fffdd0',
   scale: {
     mode: Phaser.Scale.FIT,
@@ -21,7 +21,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
+      debug: true
     }
   },
   scene: {
@@ -41,16 +41,37 @@ function isMobileDevice() {
 function preload() {
   this.load.image('ball-left', 'image/cuteghost2.png');
   this.load.image('ball-right', 'image/cuteghost-right2.png');
+  this.load.image('pachirisu', 'image/pachirisu-left.png');
+  this.load.image('emonga-left', 'image/emonga-left.png');
+  this.load.image('emonga-right', 'image/emonga-right.png');
+  this.load.image('pichu-left', 'image/pichu-left.png');
+  this.load.image('pichu-right', 'image/pichu-right.png');
 
   this.load.image('obstacle-left', 'image/cuteghost9.png');
   this.load.image('obstacle-right', 'image/cuteghost-right9.png');
+  this.load.image('monster-ball', 'image/monster-ball.png')
+}
+let player_img = {
+  left: 'pichu-left',
+  right: 'pichu-right'
 }
 
+const patterns = {
+  basicShooter: function (scene) {
+    spawnObstacleTowardPlayer(scene);
+  },
+  octoBurst: function (scene) {
+    spawnEightDirectionalBurst(scene);
+  },
+}
+
+let patternEvents = [];
+
 function create() {
-  player = this.physics.add.image(400, 300, 'ball-right');
-  player.setScale(0.1);
-  player.setSize(390, 500);
-  player.setOffset(300,200);
+  player = this.physics.add.image(400, 300, player_img.right);
+  player.setScale(0.2);
+  player.setSize(220, 510);
+  player.setOffset(285,265);
   player.setCollideWorldBounds(true);
 
   cursors = this.input.keyboard.createCursorKeys();
@@ -63,20 +84,41 @@ function create() {
     location.reload();
   });
 
-  timerText = this.add.text(550, 20, '0.0s', { fontSize: '20px', fill: '#000000' });
+  timerText = this.add.text(1100, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
   startTime = this.time.now;
 
-  this.time.addEvent({
+  // 기본 패턴: 1초마다
+  patternEvents.push(this.time.addEvent({
     delay: 1000,
-    callback: spawnObstacle,
-    callbackScope: this,
-    loop: true
+    loop: true,
+    callback: () => patterns.basicShooter(this)
+  }));
+
+   // 30초부터 팔각 패턴 시작
+   this.time.delayedCall(30000, () => {
+    patterns.octoBurst(this);
+    patternEvents.push(this.time.addEvent({
+      delay: 15000,
+      loop: true,
+      callback: () => patterns.octoBurst(this)
+    }));
   });
+
+  //60초부터 기본 패턴 하나 더 추가
+  this.time.delayedCall(60500, () => {
+    patterns.basicShooter(this);
+    patternEvents.push(this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => patterns.basicShooter(this)
+    }));
+  });
+
 }
 let lastDir = 'right'; // 기본 방향
 
 function update(time, delta) {
-  const speed = 200;
+  const speed = 400;
   player.setVelocity(0);
   
 
@@ -86,12 +128,15 @@ function update(time, delta) {
       const vx = (joystick.delta.x / norm) * speed;
       const vy = (joystick.delta.y / norm) * speed;
       if (vx < 0 && lastDir !== 'left'){
-        player.setTexture('ball-left');
+        player.setTexture(player_img.left);
+        
         lastDir = 'left';
       }
       else if (vx > 0 && lastDir !== 'right') {
-        player.setTexture('ball-right');
+        player.setTexture(player_img.right);
+        
         lastDir = 'right';
+
       }
       player.setVelocity(vx, vy);
     }
@@ -99,14 +144,14 @@ function update(time, delta) {
     if (cursors.left.isDown) {
       player.setVelocityX(-speed);
       if (lastDir !== 'left'){
-        player.setTexture('ball-left');
+        player.setTexture(player_img.left);
         lastDir = 'left';
       }
     }
     if (cursors.right.isDown) {
       player.setVelocityX(speed);
       if (lastDir !== 'right'){
-        player.setTexture('ball-right');
+        player.setTexture(player_img.right);
         lastDir = 'right';
       }
     }
@@ -116,28 +161,53 @@ function update(time, delta) {
 
   timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
 }
-function spawnObstacle() {
+function spawnObstacleTowardPlayer() {
   const side = Phaser.Math.Between(0, 3);
   let x, y;
 
   switch (side) {
-    case 0: x = 0; y = Phaser.Math.Between(0, 600); break;         // 왼쪽
-    case 1: x = 600; y = Phaser.Math.Between(0, 600); break;       // 오른쪽
-    case 2: x = Phaser.Math.Between(0, 600); y = 0; break;         // 위쪽
-    case 3: x = Phaser.Math.Between(0, 600); y = 600; break;       // 아래쪽
+    case 0: x = 0; y = Phaser.Math.Between(0, 1200); break;         // 왼쪽
+    case 1: x = 1200; y = Phaser.Math.Between(0, 1200); break;       // 오른쪽
+    case 2: x = Phaser.Math.Between(0, 1200); y = 0; break;         // 위쪽
+    case 3: x = Phaser.Math.Between(0, 1200); y = 1200; break;       // 아래쪽
   }
 
   const dx = player.x - x;
   const dy = player.y - y;
   const angle = Math.atan2(dy, dx);
-  const texture = dx < 0 ? 'obstacle-left' : 'obstacle-right';
+  const texture = dx < 0 ? 'monster-ball' : 'monster-ball';
   const obstacle = obstacles.create(x, y, texture);
-  obstacle.setScale(0.05);
-  obstacle.setSize(390, 500);
-  obstacle.setOffset(300,200);
-  const speed = 150;
+  obstacle.setScale(0.1);
+  
+  //obstacle.setScale(0.1);
+  //obstacle.setSize(390, 500);
+  //obstacle.setOffset(300,200);
+  const speed = 300;
   obstacle.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 }
+
+function spawnEightDirectionalBurst() {
+  const center = { x: player.x, y: player.y };
+  
+
+  for (let i = 0; i < 8; i++) {
+    const x = 600+800*Math.cos(Phaser.Math.DegToRad(i*45));
+    const y = 600+800*Math.sin(Phaser.Math.DegToRad(i*45));;
+
+    const dx = player.x - x;
+    const dy = player.y - y;
+    const angle = Math.atan2(dy, dx);
+
+    const obstacle = obstacles.create(x, y, 'monster-ball');
+    obstacle.setScale(0.1);
+
+    const speed = 300;
+    obstacle.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+
+}
+}
+
+
 
 let joystick = {
   active: false,
