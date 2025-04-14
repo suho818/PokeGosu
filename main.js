@@ -21,7 +21,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
+      debug: true
     }
   },
   scene: {
@@ -60,17 +60,6 @@ let player_img = {
   right: 'pichu-right'
 }
 
-const patterns = {
-  basicShooter: function (scene) {
-    spawnObstacleTowardPlayer(scene);
-  },
-  octoBurst: function (scene) {
-    spawnEightDirectionalBurst(scene);
-  },
-}
-
-let patternEvents = [];
-
 function create() {
   this.anims.create({
     key: 'pichu',
@@ -79,7 +68,7 @@ function create() {
     repeat: -1
   })
 
-  player = this.physics.add.sprite(200, 200, 'pichu');
+  player = this.physics.add.sprite(600, 600, 'pichu');
   player.anims.play('pichu');
   player.setScale(0.2);
   player.setSize(170, 250);
@@ -100,33 +89,9 @@ function create() {
 
   timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
   startTime = this.time.now;
-
-  // 기본 패턴: 1초마다
-  patternEvents.push(this.time.addEvent({
-    delay: 1000,
-    loop: true,
-    callback: () => patterns.basicShooter(this)
-  }));
-
-   // 30초부터 팔각 패턴 시작
-   this.time.delayedCall(30000, () => {
-    patterns.octoBurst(this);
-    patternEvents.push(this.time.addEvent({
-      delay: 15000,
-      loop: true,
-      callback: () => patterns.octoBurst(this)
-    }));
-  });
-
-  //60초부터 기본 패턴 하나 더 추가
-  this.time.delayedCall(60500, () => {
-    patterns.basicShooter(this);
-    patternEvents.push(this.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: () => patterns.basicShooter(this)
-    }));
-  });
+  
+  patternManager(patternList, this);
+  
 
 }
 
@@ -211,7 +176,7 @@ function update(time, delta) {
   }
   timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
 }
-function spawnObstacleTowardPlayer() {
+function spawnBasicShooter() {
   const side = Phaser.Math.Between(0, 3);
   let x, y;
 
@@ -226,17 +191,12 @@ function spawnObstacleTowardPlayer() {
   const dy = player.y - y;
   const angle = Math.atan2(dy, dx);
   const texture = dx < 0 ? 'monster-ball' : 'monster-ball';
-  const obstacle = obstacles.create(x, y, texture);
-  obstacle.setScale(0.1);
-  
-  //obstacle.setScale(0.1);
-  //obstacle.setSize(390, 500);
-  //obstacle.setOffset(300,200);
   const speed = 300;
-  obstacle.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+  createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
+    
 }
 
-function spawnEightDirectionalBurst() {
+function spawnOctoBurst() {
   const center = { x: player.x, y: player.y };
   
 
@@ -247,16 +207,38 @@ function spawnEightDirectionalBurst() {
     const dx = player.x - x;
     const dy = player.y - y;
     const angle = Math.atan2(dy, dx);
-
-    const obstacle = obstacles.create(x, y, 'monster-ball');
-    obstacle.setScale(0.1);
-
     const speed = 300;
-    obstacle.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
-
+    createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
+    
 }
 }
 
+function spawnLineBurst(n) {
+  const side = Phaser.Math.Between(0, 3);
+  const speed = 300;
+  let x, y;
+
+  switch (side) {
+    case 0: x = 0; y = 600; break;         // 왼쪽
+    case 1: x = 1200; y = 600; break;       // 오른쪽
+    case 2: x = 600; y = 0; break;         // 위쪽
+    case 3: x = 600; y = 1200; break;       // 아래쪽
+  }
+  if (x==0 || x==1200) {
+  let x_dir = (600-x)/600
+  for (let i = 0; i < n; i++) {
+    y = 1200/(n+1)*(i+1);
+    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.1, flipX=!(x_dir+1));
+  }
+}
+  else if (y==0 || y==1200) {
+    let y_dir = (600-y)/600
+    for (let i = 0; i < n; i++) {
+      x = 1200/(n+1)*(i+1);
+      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.1);
+    }
+  }
+}
 
 
 let joystick = {
@@ -338,3 +320,67 @@ document.addEventListener('dragstart', (e) => {
   e.preventDefault();
 });
 
+function createBall (img, x, y, vx, vy, scale = 0.1, flipX = false, flipY = false) {
+  const obstacle = obstacles.create(x, y, img);
+      obstacle.setScale(scale);
+      obstacle.setVelocity(vx,vy);
+      obstacle.setCircle(125);
+      obstacle.setFlipX(flipX);
+      obstacle.setFlipY(flipY);
+}
+let patternEvents = [];
+
+function patternManager(patternList, scene)
+{ 
+  const patterns = {
+    basicShoot: function (scene) {
+      spawnBasicShooter(scene);
+    },
+    octoBurst: function (scene) {
+      spawnOctoBurst(scene);
+    },
+    lineBurst: function (n) {
+      spawnLineBurst(n);
+    }
+  }
+
+  for (const pattern of patternList) {
+    const [patternName, triggerTime, ...args] = pattern;
+    if (patterns[patternName]) {
+      scene.time.delayedCall(triggerTime*1000, () => {patterns[patternName](...args)});
+
+    } 
+  }
+  // 기본 패턴: 1초마다
+  patternEvents.push(scene.time.addEvent({
+    delay: 1000,
+    loop: true,
+    callback: () => patterns.basicShoot()
+  }));
+
+}
+
+const patternList = [
+    ['lineBurst', 15, 5],
+    ['octoBurst', 30],
+    ['lineBurst', 45, 6],
+    ['octoBurst', 52.5],    
+    ['octoBurst', 60],
+    ['octoBurst', 67.5],
+    ['lineBurst', 75, 7],
+    ['octoBurst', 90],
+    ['lineBurst', 105, 8],
+    ['octoBurst', 110],
+    ['octoBurst', 115],
+    ['octoBurst', 120],
+    ['lineBurst', 120, 10],
+    ['lineBurst', 122.5, 10],
+    ['lineBurst', 125, 10],
+    ['lineBurst', 127.5, 10],
+    ['lineBurst', 130, 10],
+    ['octoBurst', 132],
+    ['octoBurst', 134],
+    ['octoBurst', 136],
+    ['octoBurst', 138],
+    ['octoBurst', 140]
+]
