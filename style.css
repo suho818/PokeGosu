@@ -7,7 +7,12 @@ body {
      user-select: none;       /* 텍스트 선택 방지 */
   -webkit-user-drag: none; /* 사파리용 이미지 드래그 방지 */
   }
-  
+body, canvas {
+  -webkit-user-select: none;      /* 텍스트 드래그 방지 */
+  -webkit-touch-callout: none;    /* 꾹 누르기 방지 */
+  -webkit-tap-highlight-color: transparent; /* 터치 하이라이트 제거 */
+  touch-action: none;             /* 기본 제스처 차단 (팁: 아래 참고) */
+}
   canvas {
     display: block;
       position: absolute;
