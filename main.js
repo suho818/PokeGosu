@@ -21,7 +21,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
+      debug: true
     }
   },
   scene: {
@@ -41,7 +41,6 @@ function isMobileDevice() {
 function preload() {
   this.load.image('ball-left', 'image/cuteghost2.png');
   this.load.image('ball-right', 'image/cuteghost-right2.png');
-  this.load.image('pachirisu', 'image/pachirisu-left.png');
   this.load.image('emonga-left', 'image/emonga-left.png');
   this.load.image('emonga-right', 'image/emonga-right.png');
   this.load.image('pichu-left', 'image/pichu-left.png');
@@ -49,6 +48,26 @@ function preload() {
   this.load.spritesheet('pichu', 'image/pichu-spritesheet.png', {
     frameWidth:370,
     frameHeight:400,
+  });
+  this.load.spritesheet('torchic', 'image/torchic-spritesheet.png', {
+    frameWidth:33,
+    frameHeight:61,
+  });
+  this.load.spritesheet('emolga', 'image/emolga-spritesheet.png', {
+    frameWidth:66,
+    frameHeight:59,
+  });
+  this.load.spritesheet('pichu2', 'image/pichu-spritesheet2.png', {
+    frameWidth:51,
+    frameHeight:52,
+  });
+  this.load.spritesheet('eevee', 'image/eevee-spritesheet.png', {
+    frameWidth:64,
+    frameHeight:55,
+  });
+  this.load.spritesheet('pachirisu', 'image/pachirisu-spritesheet.png', {
+    frameWidth:57,
+    frameHeight:75,
   });
 
   this.load.image('obstacle-left', 'image/cuteghost9.png');
@@ -67,12 +86,42 @@ function create() {
     frameRate: 24,
     repeat: -1
   })
+  this.anims.create({
+    key: 'torchic',
+    frames: this.anims.generateFrameNumbers('torchic', { start: 0, end: 60 }),
+    frameRate: 24,
+    repeat: -1
+  })
+  this.anims.create({
+    key: 'pichu2',
+    frames: this.anims.generateFrameNumbers('pichu2', { start: 0, end: 46 }),
+    frameRate: 24,
+    repeat: -1
+  })
+  this.anims.create({
+    key: 'eevee',
+    frames: this.anims.generateFrameNumbers('eevee', { start: 0, end: 24 }),
+    frameRate: 24,
+    repeat: -1
+  })
+  this.anims.create({
+    key: 'pachirisu',
+    frames: this.anims.generateFrameNumbers('pachirisu', { start: 0, end: 48 }),
+    frameRate: 24,
+    repeat: -1
+  })
+  this.anims.create({
+    key: 'emolga',
+    frames: this.anims.generateFrameNumbers('emolga', { start: 0, end: 98 }),
+    frameRate: 24,
+    repeat: -1
+  })
 
   player = this.physics.add.sprite(600, 600, 'pichu');
   player.anims.play('pichu');
   player.setScale(0.2);
-  player.setSize(170, 250);
-  player.setOffset(100,130);
+  player.setSize(33, 61);
+  //player.setOffset(100,130);
   player.setCollideWorldBounds(true);
 
   cursors = this.input.keyboard.createCursorKeys();
