@@ -118,9 +118,9 @@ function create() {
     repeat: -1
   })
 
-  player = this.physics.add.sprite(600, 600, 'pichu');
-  player.anims.play('pichu');
-  player.setScale(0.2);
+  player = this.physics.add.sprite(600, 600, 'pichu2');
+  player.anims.play('pichu2');
+  player.setScale(1);
   player.setSize(33, 61);
   //player.setOffset(100,130);
   player.setCollideWorldBounds(true);
@@ -131,6 +131,9 @@ function create() {
 
   this.physics.add.overlap(player, obstacles, () => {
     this.scene.pause();
+    if (navigator.vibrate) {
+      navigator.vibrate(30); // 눌렀을 때 짧게 진동
+    }
     alert('Game Over!');
     location.reload();
   });
@@ -149,7 +152,7 @@ function create() {
 }
 
 function setPichuAnimationSpeed(player, targetFrameRate) {
-  const animKey = 'pichu';
+  const animKey = 'pichu2';
 
   const currentAnim = player.anims.currentAnim;
   const currentFrame = player.anims.currentFrame;
@@ -183,23 +186,29 @@ function update(time, delta) {
 }
 
 function spawnBasicShooter() {
-  const side = Phaser.Math.Between(0, 3);
-  let x, y;
+  // 원의 반지름 설정
+  const radius = 900;
+  
+  // 0부터 2π 사이의 랜덤 각도 계산
+  const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+  
+  // 원 둘레 위에서 랜덤 위치 계산 (x, y)
+  const x = 600 + Math.cos(angle) * radius;  // 화면 중앙 (x: 600, y: 600)을 기준으로
+  const y = 600 + Math.sin(angle) * radius;
 
-  switch (side) {
-    case 0: x = 0; y = Phaser.Math.Between(0, 1200); break;         // 왼쪽
-    case 1: x = 1200; y = Phaser.Math.Between(0, 1200); break;       // 오른쪽
-    case 2: x = Phaser.Math.Between(0, 1200); y = 0; break;         // 위쪽
-    case 3: x = Phaser.Math.Between(0, 1200); y = 1200; break;       // 아래쪽
-  }
-
+  // 플레이어로 향하는 벡터 계산
   const dx = player.x - x;
   const dy = player.y - y;
-  const angle = Math.atan2(dy, dx);
-  const texture = dx < 0 ? 'monster-ball' : 'monster-ball';
-  const speed = 300;
-  createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
-    
+  const angleToPlayer = Math.atan2(dy, dx);
+
+  // 텍스처 선택 (왼쪽 또는 오른쪽)
+  const texture = dx < 0 ? 'monster-ball' : 'monster-ball'; // 나중에 텍스처 다르게 설정 가능
+
+  // 발사 속도 설정
+  const speed = 250;
+
+  // 몬스터 생성 (기존 로직 그대로)
+  createBall('monster-ball', x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
 }
 
 function spawnOctoBurst() {
@@ -213,7 +222,7 @@ function spawnOctoBurst() {
     const dx = player.x - x;
     const dy = player.y - y;
     const angle = Math.atan2(dy, dx);
-    const speed = 300;
+    const speed = 250;
     createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
     
 }
@@ -221,7 +230,7 @@ function spawnOctoBurst() {
 
 function spawnLineBurst(n) {
   const side = Phaser.Math.Between(0, 3);
-  const speed = 300;
+  const speed = 250;
   let x, y;
 
   switch (side) {
@@ -234,14 +243,14 @@ function spawnLineBurst(n) {
   let x_dir = (600-x)/600
   for (let i = 0; i < n; i++) {
     y = 1200/(n+1)*(i+1);
-    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.1, flipX=!(x_dir+1));
+    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.08, flipX=!(x_dir+1));
   }
 }
   else if (y==0 || y==1200) {
     let y_dir = (600-y)/600
     for (let i = 0; i < n; i++) {
       x = 1200/(n+1)*(i+1);
-      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.1);
+      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.08);
     }
   }
 }
@@ -308,13 +317,38 @@ function setupJoystick() {
 }
 
 function setupDpad() {
+  const dpad = document.getElementById('dpadOverlay');
   if (!isMobileDevice()) {
-    document.getElementById('dpadOverlay').style.display = 'none';
+    dpad.style.display = 'none';
     return;
   }
-  const dpad = document.getElementById('dpadOverlay');
+  
   dpad.addEventListener('contextmenu', e => e.preventDefault());
-const dpadSize = 150;
+  const highlight = document.getElementById('dpadHighlight');
+  const dpadSize = 200;
+const imageScale = 512; // 원본 이미지 기준
+
+const directionPositions = {
+  up: [256, 85],
+  down: [256, 427],
+  left: [85, 256],
+  right: [427, 256],
+  center: [256, 256]
+};
+function showHighlight(direction) {
+  if (!directionPositions[direction]) return;
+
+  const [imgX, imgY] = directionPositions[direction];
+  const scale = dpadSize / imageScale;
+
+  highlight.style.left = `${imgX * scale - 30}px`;
+  highlight.style.top = `${imgY * scale - 30}px`;
+  highlight.style.display = 'block';
+}
+
+function hideHighlight() {
+  highlight.style.display = 'none';
+}
 function updateDpadDirection(e) {
   const rect = dpad.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -322,11 +356,30 @@ function updateDpadDirection(e) {
   const dir = getDirectionFromDpad(x, y, dpadSize);
 
   game.scene.keys.default.dpadDirection = dir;
+  showHighlight(dir); // ✅ 방향 강조 시각 효과
 }
 dpad.addEventListener('pointerdown', updateDpadDirection);
 dpad.addEventListener('pointermove', updateDpadDirection);
 dpad.addEventListener('pointerup', () => {
   game.scene.keys.default.dpadDirection = null;
+  hideHighlight(); // ✅ 하이라이트 숨기기
+});
+
+const dpadImg = document.getElementById('dpadImage');
+
+// 눌렀을 때 시각 효과 ON
+dpadImg.addEventListener('pointerdown', () => {
+  dpadImg.classList.add('pressed');
+  if (navigator.vibrate) {
+    navigator.vibrate(30); // 눌렀을 때 짧게 진동
+  }
+});
+
+// 뗐을 때 시각 효과 OFF
+['pointerup', 'pointercancel', 'pointerleave'].forEach(event => {
+  dpadImg.addEventListener(event, () => {
+    dpadImg.classList.remove('pressed');
+  });
 });
 }
 
@@ -407,7 +460,7 @@ document.addEventListener('dragstart', (e) => {
   e.preventDefault();
 });
 
-function createBall (img, x, y, vx, vy, scale = 0.1, flipX = false, flipY = false) {
+function createBall (img, x, y, vx, vy, scale = 0.08, flipX = false, flipY = false) {
   const obstacle = obstacles.create(x, y, img);
       obstacle.setScale(scale);
       obstacle.setVelocity(vx,vy);
@@ -418,7 +471,7 @@ function createBall (img, x, y, vx, vy, scale = 0.1, flipX = false, flipY = fals
 let patternEvents = [];
 
 function movePlayer(scene) {
-  const speed = 400;
+  const speed = 300;
   //const player = scene.player;
   const joystick = scene.joystick;
   //const cursors = scene.cursors;
@@ -500,9 +553,9 @@ function patternManager(patternList, scene)
   }
   // 기본 패턴: 1초마다
   patternEvents.push(scene.time.addEvent({
-    delay: 1000,
+    delay: 300,
     loop: true,
-    callback: () => patterns.octoBurst()
+    callback: () => patterns.basicShoot()
   }));
 
 }

@@ -70,6 +70,7 @@ body, canvas {
 /* 기본 상태: 안 보임 */
 #dpadOverlay {
   display: none;
+  
 }
 #dpadImage {
   width: 100%;
@@ -79,8 +80,22 @@ body, canvas {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   pointer-events: auto;
+  transition: transform 0.05s ease, filter 0.05s ease;
 }
-
+#dpadImage.pressed {
+  transform: scale(0.95);
+  filter: brightness(0.8);
+}
+#dpadHighlight {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 0, 0.3);
+  border-radius: 50%;
+  display: none;
+  pointer-events: none;
+  z-index: 1000;
+}
 
 /* 모바일 기기에서만 표시 */
 @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
@@ -90,8 +105,8 @@ body, canvas {
     bottom: 5%;
     left: 50%;
     transform: translate(-50%,0);
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
     z-index: 999;
     pointer-events: auto;
      /* 핵심 방어 옵션들 */
