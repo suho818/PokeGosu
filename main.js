@@ -330,7 +330,15 @@ dpad.addEventListener('pointerup', () => {
 });
 }
 
+let lastTap = 0;
 
+document.getElementById('dpadImage').addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTap < 400) {
+    e.preventDefault();         // ✅ 더블탭 확대 차단
+  }
+  lastTap = now;
+});
 
 
 function getDirectionFromDpad(x, y, size) {
