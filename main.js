@@ -717,7 +717,8 @@ const patternList = [
 
 
 
-
-game = new Phaser.Game(config);
-//setupJoystick();
-setupDpad();
+document.fonts.ready.then(() => {
+  // ✅ 폰트가 전부 로드된 이후 Phaser 게임 시작
+  game = new Phaser.Game(config);
+  setupDpad();
+});
