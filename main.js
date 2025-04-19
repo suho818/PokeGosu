@@ -136,16 +136,7 @@ function create() {
   });
 
 
-  this.input.on('pointerdown', (pointer) => {
-    if (pointer.x < dpadX || pointer.x > dpadX + dpadWidth) return;
-    if (pointer.y < dpadY || pointer.y > dpadY + dpadHeight) return;
-  
-    const localX = pointer.x - dpadX;
-    const localY = pointer.y - dpadY;
-  
-    const direction = getDirectionFromDpad(localX, localY);
-    movePlayerInDirection(direction);
-  });
+ 
  
  
   
@@ -322,17 +313,18 @@ function setupDpad() {
     return;
   }
   const dpad = document.getElementById('dpadOverlay');
-const dpadSize = 300;
-
-dpad.addEventListener('pointerdown', (e) => {
+  dpad.addEventListener('contextmenu', e => e.preventDefault());
+const dpadSize = 150;
+function updateDpadDirection(e) {
   const rect = dpad.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
+  const dir = getDirectionFromDpad(x, y, dpadSize);
 
-  const direction = getDirectionFromDpad(x, y, dpadSize);
-  game.scene.keys.default.dpadDirection = direction;
-});
-
+  game.scene.keys.default.dpadDirection = dir;
+}
+dpad.addEventListener('pointerdown', updateDpadDirection);
+dpad.addEventListener('pointermove', updateDpadDirection);
 dpad.addEventListener('pointerup', () => {
   game.scene.keys.default.dpadDirection = null;
 });
