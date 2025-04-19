@@ -21,7 +21,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: true
+      debug: false
     }
   },
   scene: {
@@ -31,7 +31,7 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime;
+let player, cursors, timerText, startTime, startUI, isGameStarted, isGameOver;
 let obstacles;
 
 function isMobileDevice() {
@@ -121,32 +121,161 @@ function create() {
   player = this.physics.add.sprite(600, 600, 'pichu2');
   player.anims.play('pichu2');
   player.setScale(1);
-  player.setSize(33, 61);
-  //player.setOffset(100,130);
+  player.setSize(22, 35);
+  player.setOffset(14,16);
   player.setCollideWorldBounds(true);
 
   cursors = this.input.keyboard.createCursorKeys();
 
   obstacles = this.physics.add.group();
+  
+  isGameStarted = false;
+  isGameOver = false;
+  startUI = this.add.container(0, 0);
+
+  const title = this.add.text(600, 600 - 450, '포케고수', {
+    fontFamily: 'GSC',
+    fontSize: '120px',
+    color: '#000'
+  }).setOrigin(0.5);
+
+  const startBtn = this.add.text(600 + 200, 600 - 70, '게임 시작', {
+    fontFamily: 'GSC',
+    fontSize: '60px',
+    color: '#fff',
+    backgroundColor: '#000',
+    padding: { x: 20, y: 10 }
+  }).setOrigin(0.5).setInteractive();
+
+  const changeBtn = this.add.text(600 - 200, 600 - 70, '  포켓몬  ', {
+    fontFamily: 'GSC',
+    fontSize: '60px',
+    color: '#fff',
+    backgroundColor: '#000',
+    padding: { x: 20, y: 10 }
+  }).setOrigin(0.5).setInteractive();
+
+  const rankingBtn = this.add.text(600 - 180, 670, '랭킹', {
+    fontFamily: 'GSC',
+    fontSize: '60px',
+    color: '#fff',
+    backgroundColor: '#000',
+    padding: { x: 20, y: 10 }
+  }).setOrigin(0.5).setInteractive();
+
+  const statisticBtn = this.add.text(600 + 180, 670, '통계', {
+    fontFamily: 'GSC',
+    fontSize: '60px',
+    color: '#fff',
+    backgroundColor: '#000',
+    padding: { x: 20, y: 10 }
+  }).setOrigin(0.5).setInteractive();
+
+  startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn]);
+
+  startBtn.on('pointerdown', () =>
+  {
+    this.tweens.add({
+      targets: title,
+      y: title.y - 600,
+      alpha: 0,
+      duration: 500,
+      ease: 'Back.easeIn'
+    });
+
+    this.tweens.add({
+      targets: startBtn,
+      x: startBtn.x + 600,
+      alpha: 0,
+      duration: 500,
+      ease: 'Back.easeIn'
+    });
+
+    this.tweens.add({
+      targets: changeBtn,
+      x: startBtn.x - 600,
+      alpha: 0,
+      duration: 500,
+      ease: 'Back.easeIn'
+    });
+
+    this.tweens.add({
+      targets: rankingBtn,
+      x: startBtn.x - 600,
+      alpha: 0,
+      duration: 500,
+      ease: 'Back.easeIn'
+    });
+
+    this.tweens.add({
+      targets: statisticBtn,
+      x: startBtn.x + 600,
+      alpha: 0,
+      duration: 500,
+      ease: 'Back.easeIn'
+    });
+    timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
+    startTime = this.time.now;
+    this.time.delayedCall(600, () => 
+    {
+      startUI.setVisible(false);
+      isGameStarted = true;
+      patternManager(patternList, this);
+    })
+  })
 
   this.physics.add.overlap(player, obstacles, () => {
     this.scene.pause();
+    patternEvents.forEach(timer =>
+      timer.remove()
+    );
+    patternEvents = [];
+    
     if (navigator.vibrate) {
       navigator.vibrate(30); // 눌렀을 때 짧게 진동
     }
     alert('Game Over!');
-    location.reload();
-  });
+    restartGame();
+    this.scene.resume();
+});
+  function resetStartUIPosition() {
+    title.setPosition(600, 600 - 450);
+    title.setAlpha(1);
 
+    startBtn.setPosition(600 + 200, 600 - 70);
+    startBtn.setAlpha(1);
+
+    changeBtn.setPosition(600 - 200, 600 - 70);
+    changeBtn.setAlpha(1);
+
+    rankingBtn.setPosition(600 + 180, 600 + 70);
+    rankingBtn.setAlpha(1);
+
+    statisticBtn.setPosition(600 - 180, 600 + 70);
+    statisticBtn.setAlpha(1);
+  }
+  function restartGame() {
+    player.setPosition(600, 600);
+    player.setVelocity(0, 0);
+    
+    
+    timerText.destroy();
+
+    isGameStarted = false;
+    isGameOver = false;
+
+    startUI.setVisible(true);
+    obstacles.clear(true, true);
+    resetStartUIPosition();
+  }
 
  
  
  
   
-  timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
-  startTime = this.time.now;
   
-  patternManager(patternList, this);
+  
+  //patternManager(patternList, this);
   
 
 }
@@ -181,8 +310,14 @@ function setPichuAnimationSpeed(player, targetFrameRate) {
 let lastDir = 'left'; // 기본 방향
 
 function update(time, delta) {
+  if (!isGameStarted) {}
+  else if (!isGameOver)
+  {
+    timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
+  }
   movePlayer(this); // this는 Phaser.Scene
-  timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
+  
+  
 }
 
 function spawnBasicShooter() {
@@ -441,16 +576,6 @@ function getDpadVector(direction) {
 
 
 
-
-// 버튼 클릭 시 게임 시작
-const btn = document.getElementById('startButton');
-btn.onclick = () => {
-  btn.remove();
-  game = new Phaser.Game(config);
-  //setupJoystick();
-  setupDpad();
-};
-
 // 드래그 방지
 document.addEventListener('touchmove', (e) => {
   e.preventDefault();
@@ -529,7 +654,6 @@ function movePlayer(scene) {
 }
 
 
-
 function patternManager(patternList, scene)
 { 
   const patterns = {
@@ -547,8 +671,8 @@ function patternManager(patternList, scene)
   for (const pattern of patternList) {
     const [patternName, triggerTime, ...args] = pattern;
     if (patterns[patternName]) {
-      scene.time.delayedCall(triggerTime*1000, () => {patterns[patternName](...args)});
-
+      const t1 = scene.time.delayedCall(triggerTime*1000, () => {patterns[patternName](...args)});
+      patternEvents.push(t1);
     } 
   }
   // 기본 패턴: 1초마다
@@ -584,3 +708,16 @@ const patternList = [
     ['octoBurst', 138],
     ['octoBurst', 140]
 ]
+
+
+
+
+
+
+
+
+
+
+game = new Phaser.Game(config);
+//setupJoystick();
+setupDpad();

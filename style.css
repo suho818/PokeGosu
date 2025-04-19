@@ -122,3 +122,17 @@ body, canvas {
     user-select: none;
   }
 }
+
+
+
+
+@font-face {
+  font-family: 'GSC';
+  src: url('fonts/gsc.ttf')
+format('truetype');}
+
+@font-face {
+  font-family: 'PT';
+  src: url('fonts/pt.ttf')
+format('truetype');
+}
