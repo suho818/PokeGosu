@@ -39,6 +39,7 @@ function isMobileDevice() {
 }
 
 function preload() {
+  this.load.image('dpad', 'image/dpad.png');
   this.load.image('ball-left', 'image/cuteghost2.png');
   this.load.image('ball-right', 'image/cuteghost-right2.png');
   this.load.image('emonga-left', 'image/emonga-left.png');
@@ -134,8 +135,20 @@ function create() {
     location.reload();
   });
 
- 
 
+  this.input.on('pointerdown', (pointer) => {
+    if (pointer.x < dpadX || pointer.x > dpadX + dpadWidth) return;
+    if (pointer.y < dpadY || pointer.y > dpadY + dpadHeight) return;
+  
+    const localX = pointer.x - dpadX;
+    const localY = pointer.y - dpadY;
+  
+    const direction = getDirectionFromDpad(localX, localY);
+    movePlayerInDirection(direction);
+  });
+ 
+ 
+  
   timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000' });
   startTime = this.time.now;
   
@@ -174,57 +187,10 @@ function setPichuAnimationSpeed(player, targetFrameRate) {
 let lastDir = 'left'; // 기본 방향
 
 function update(time, delta) {
-  const speed = 400;
-  player.setVelocity(0);
-  let vertical = 0;
-  let horizontal = 0;
-
-  if (isMobileDevice() && joystick.active) {
-    const norm = Math.hypot(joystick.delta.x, joystick.delta.y);
-    if (norm > 10) {
-      const vx = (joystick.delta.x / norm) * speed;
-      const vy = (joystick.delta.y / norm) * speed;
-      if (vx < 0 && lastDir !== 'left'){
-        player.setFlipX(false);  // 왼쪽 바라보게
-        lastDir = 'left';
-      }
-      else if (vx > 0 && lastDir !== 'right') {
-        player.setFlipX(true);  // 오른쪽 바라보게        
-        lastDir = 'right';
-
-      }
-      player.setVelocity(vx, vy);
-    }
-  } else {
-    if (cursors.left.isDown) {
-      vertical = -1;
-      if (lastDir !== 'left'){
-        player.setFlipX(false);  // 왼쪽 바라보게
-        lastDir = 'left';
-      }
-    }
-    if (cursors.right.isDown) {
-      vertical = 1;
-      if (lastDir !== 'right'){
-        player.setFlipX(true);  // 오른쪽 바라보게
-        lastDir = 'right';
-      }
-    }
-    if (cursors.up.isDown) horizontal = -1;
-    if (cursors.down.isDown) horizontal = 1;
-    let reci_norm = 0;
-    if (horizontal != 0 || vertical !=0)
-      {reci_norm = 1/Math.sqrt(horizontal**2 + vertical**2);
-      }
-    player.setVelocity(reci_norm * speed * vertical, reci_norm * speed * horizontal);
-  }
-  if (player.body.velocity.length() > 5){
-    setPichuAnimationSpeed(player, 48);
-  } else {
-    //setPichuAnimationSpeed(player, 24);
-  }
+  movePlayer(this); // this는 Phaser.Scene
   timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
 }
+
 function spawnBasicShooter() {
   const side = Phaser.Math.Between(0, 3);
   let x, y;
@@ -247,11 +213,11 @@ function spawnBasicShooter() {
 
 function spawnOctoBurst() {
   const center = { x: player.x, y: player.y };
-  
+  let offset = Phaser.Math.Between(0,44);
 
   for (let i = 0; i < 8; i++) {
-    const x = 600+800*Math.cos(Phaser.Math.DegToRad(i*45));
-    const y = 600+800*Math.sin(Phaser.Math.DegToRad(i*45));;
+    const x = 600+800*Math.cos(Phaser.Math.DegToRad(offset + i*45));
+    const y = 600+800*Math.sin(Phaser.Math.DegToRad(offset + i*45));;
 
     const dx = player.x - x;
     const dy = player.y - y;
@@ -350,6 +316,77 @@ function setupJoystick() {
   });
 }
 
+function setupDpad() {
+  if (!isMobileDevice()) {
+    document.getElementById('dpadOverlay').style.display = 'none';
+    return;
+  }
+  const dpad = document.getElementById('dpadOverlay');
+const dpadSize = 300;
+
+dpad.addEventListener('pointerdown', (e) => {
+  const rect = dpad.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const direction = getDirectionFromDpad(x, y, dpadSize);
+  game.scene.keys.default.dpadDirection = direction;
+});
+
+dpad.addEventListener('pointerup', () => {
+  game.scene.keys.default.dpadDirection = null;
+});
+}
+
+
+
+
+function getDirectionFromDpad(x, y, size) {
+  const cell = size / 3;
+  const col = Math.floor(x / cell);
+  const row = Math.floor(y / cell);
+
+  if (col === 1 && row === 1) {
+    const offsetX = x % cell;
+    const offsetY = y % cell;
+    const margin = cell * 0.3;
+    if (
+      offsetX > margin && offsetX < cell - margin &&
+      offsetY > margin && offsetY < cell - margin
+    ) return 'center';
+    return null;
+  }
+
+  const map = {
+    '0,0': 'upLeft',
+    '0,1': 'left',
+    '0,2': 'downLeft',
+    '1,0': 'up',
+    '1,2': 'down',
+    '2,0': 'upRight',
+    '2,1': 'right',
+    '2,2': 'downRight',
+  };
+
+  return map[`${col},${row}`] || null;
+}
+
+
+function getDpadVector(direction) {
+  const map = {
+    up: [0, -1],
+    down: [0, 1],
+    left: [-1, 0],
+    right: [1, 0],
+    upLeft: [-1, -1],
+    upRight: [1, -1],
+    downLeft: [-1, 1],
+    downRight: [1, 1],
+  };
+  return map[direction] || [0, 0];
+}
+
+
 
 
 // 버튼 클릭 시 게임 시작
@@ -357,7 +394,8 @@ const btn = document.getElementById('startButton');
 btn.onclick = () => {
   btn.remove();
   game = new Phaser.Game(config);
-  setupJoystick();
+  //setupJoystick();
+  setupDpad();
 };
 
 // 드래그 방지
@@ -378,6 +416,66 @@ function createBall (img, x, y, vx, vy, scale = 0.1, flipX = false, flipY = fals
       obstacle.setFlipY(flipY);
 }
 let patternEvents = [];
+
+function movePlayer(scene) {
+  const speed = 400;
+  //const player = scene.player;
+  const joystick = scene.joystick;
+  //const cursors = scene.cursors;
+  const isMobile = isMobileDevice();
+  const threshold = 10;
+  let vx = 0, vy = 0;
+
+  player.setVelocity(0); // 기본 정지
+
+  // 1️⃣ 모바일 + 조이스틱
+  if (isMobile && joystick?.active) {
+    const norm = Math.hypot(joystick.delta.x, joystick.delta.y);
+    if (norm > threshold) {
+      vx = (joystick.delta.x / norm) * speed;
+      vy = (joystick.delta.y / norm) * speed;
+    }
+
+  // 2️⃣ D-Pad 입력
+  } else if (isMobile && scene.dpadDirection) {
+    const [dx, dy] = getDpadVector(scene.dpadDirection);
+    const norm = dx !== 0 || dy !== 0 ? 1 / Math.hypot(dx, dy) : 0;
+    vx = dx * speed * norm;
+    vy = dy * speed * norm;
+
+  // 3️⃣ PC 키보드
+  } else {
+    let dx = 0, dy = 0;
+    if (cursors.left.isDown) dx = -1;
+    if (cursors.right.isDown) dx = 1;
+    if (cursors.up.isDown) dy = -1;
+    if (cursors.down.isDown) dy = 1;
+
+    const norm = dx !== 0 || dy !== 0 ? 1 / Math.hypot(dx, dy) : 0;
+    vx = dx * speed * norm;
+    vy = dy * speed * norm;
+  }
+
+  // 좌우 반전 방향 처리
+  if (vx < 0 && scene.lastDir !== 'left') {
+    player.setFlipX(false);
+    scene.lastDir = 'left';
+  } else if (vx > 0 && scene.lastDir !== 'right') {
+    player.setFlipX(true);
+    scene.lastDir = 'right';
+  }
+
+  player.setVelocity(vx, vy);
+
+  // 애니메이션 속도 조절
+  if (player.body.velocity.length() > 5) {
+    setPichuAnimationSpeed(player, 48);
+  } else {
+    //setPichuAnimationSpeed(player, 24);
+  }
+}
+
+
 
 function patternManager(patternList, scene)
 { 
@@ -404,7 +502,7 @@ function patternManager(patternList, scene)
   patternEvents.push(scene.time.addEvent({
     delay: 1000,
     loop: true,
-    callback: () => patterns.basicShoot()
+    callback: () => patterns.octoBurst()
   }));
 
 }
