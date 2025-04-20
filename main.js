@@ -396,7 +396,7 @@ function create() {
     if (elapsedTime > best) {
       setBestRecord(elapsedTime);
     }
-    gameOverHighScoreText.setText(`최고 기록: ${Math.max(elapsedTime, best).toFixed(0)}s`);
+    gameOverHighScoreText.setText(`최고 기록: ${Math.max(elapsedTime, best).toFixed(1)}s`);
 
     scene.children.bringToTop(gameOverUI);
     gameOverUI.setVisible(true);
