@@ -31,8 +31,10 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime, startUI, isGameStarted, isGameOver;
+let player, cursors, timerText, startTime, startUI, 
+isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText;
 let obstacles;
+let elapsedTime;
 
 function isMobileDevice() {
   return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -132,7 +134,7 @@ function create() {
   isGameStarted = false;
   isGameOver = false;
   startUI = this.add.container(0, 0);
-
+  createGameOverUI(this);
   const title = this.add.text(600, 600 - 450, '포케고수', {
     fontFamily: 'GSC',
     fontSize: '120px',
@@ -146,6 +148,59 @@ function create() {
     backgroundColor: '#000',
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
+  
+  startBtn.on('pointerdown', () =>
+    {
+      if (isGameStarted) return;
+      this.tweens.add({
+        targets: title,
+        y: title.y - 600,
+        alpha: 0,
+        duration: 500,
+        ease: 'Back.easeIn'
+      });
+  
+      this.tweens.add({
+        targets: startBtn,
+        x: startBtn.x + 600,
+        alpha: 0,
+        duration: 500,
+        ease: 'Back.easeIn'
+      });
+  
+      this.tweens.add({
+        targets: changeBtn,
+        x: startBtn.x - 600,
+        alpha: 0,
+        duration: 500,
+        ease: 'Back.easeIn'
+      });
+  
+      this.tweens.add({
+        targets: rankingBtn,
+        x: startBtn.x - 600,
+        alpha: 0,
+        duration: 500,
+        ease: 'Back.easeIn'
+      });
+  
+      this.tweens.add({
+        targets: statisticBtn,
+        x: startBtn.x + 600,
+        alpha: 0,
+        duration: 500,
+        ease: 'Back.easeIn'
+      });
+      timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
+      startTime = this.time.now;
+      isGameStarted = true;
+      this.time.delayedCall(600, () => 
+      {
+        startUI.setVisible(false);
+        
+        patternManager(patternList, this);
+      })
+    })
 
   const changeBtn = this.add.text(600 - 200, 600 - 70, '  포켓몬  ', {
     fontFamily: 'GSC',
@@ -155,6 +210,10 @@ function create() {
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
 
+  changeBtn.on('pointerdown', () => {
+    alert('아직 포켓몬 교체를 할 수 없습니다.');
+  });
+
   const rankingBtn = this.add.text(600 - 180, 670, '랭킹', {
     fontFamily: 'GSC',
     fontSize: '60px',
@@ -162,6 +221,10 @@ function create() {
     backgroundColor: '#000',
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
+
+  rankingBtn.on('pointerdown', () => {
+    alert('아직 랭킹기능이 없습니다.');
+  });
 
   const statisticBtn = this.add.text(600 + 180, 670, '통계', {
     fontFamily: 'GSC',
@@ -171,61 +234,18 @@ function create() {
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
 
+  statisticBtn.on('pointerdown', () => {
+    alert('아직 통계기능이 없습니다.');
+  });
+
   startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn]);
+  createGameOverUI(this);
+  
 
-  startBtn.on('pointerdown', () =>
-  {
-    this.tweens.add({
-      targets: title,
-      y: title.y - 600,
-      alpha: 0,
-      duration: 500,
-      ease: 'Back.easeIn'
-    });
-
-    this.tweens.add({
-      targets: startBtn,
-      x: startBtn.x + 600,
-      alpha: 0,
-      duration: 500,
-      ease: 'Back.easeIn'
-    });
-
-    this.tweens.add({
-      targets: changeBtn,
-      x: startBtn.x - 600,
-      alpha: 0,
-      duration: 500,
-      ease: 'Back.easeIn'
-    });
-
-    this.tweens.add({
-      targets: rankingBtn,
-      x: startBtn.x - 600,
-      alpha: 0,
-      duration: 500,
-      ease: 'Back.easeIn'
-    });
-
-    this.tweens.add({
-      targets: statisticBtn,
-      x: startBtn.x + 600,
-      alpha: 0,
-      duration: 500,
-      ease: 'Back.easeIn'
-    });
-    timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
-    startTime = this.time.now;
-    this.time.delayedCall(600, () => 
-    {
-      startUI.setVisible(false);
-      isGameStarted = true;
-      patternManager(patternList, this);
-    })
-  })
 
   this.physics.add.overlap(player, obstacles, () => {
-    this.scene.pause();
+    isGameOver = true;
+    this.physics.world.pause();
     patternEvents.forEach(timer =>
       timer.remove()
     );
@@ -234,9 +254,7 @@ function create() {
     if (navigator.vibrate) {
       navigator.vibrate(30); // 눌렀을 때 짧게 진동
     }
-    alert('Game Over!');
-    restartGame();
-    this.scene.resume();
+    showGameOverUI(this);
 });
   function resetStartUIPosition() {
     title.setPosition(600, 600 - 450);
@@ -254,30 +272,153 @@ function create() {
     statisticBtn.setPosition(600 - 180, 600 + 70);
     statisticBtn.setAlpha(1);
   }
+
   function restartGame() {
     player.setPosition(600, 600);
     player.setVelocity(0, 0);
     
     
-    timerText.destroy();
+    timerText?.destroy();
 
     isGameStarted = false;
     isGameOver = false;
+    
 
     startUI.setVisible(true);
     obstacles.clear(true, true);
     resetStartUIPosition();
+    
   }
 
- 
- 
- 
+  function createGameOverUI(scene) {
+    const centerX = 600;
+    const centerY = 600;
   
+    gameOverUI = scene.add.container(centerX, centerY).setVisible(false).setAlpha(1);
   
+    const bg = scene.add.rectangle(0, 0, 1000, 1000, 0xfbb917, 1)
+      .setStrokeStyle(4, 0xffffff)
+      .setOrigin(0.5)
+      .setAlpha(0.8);
   
-  //patternManager(patternList, this);
-  
+    gameOverScoreText = scene.add.text(0, -100, '현재 기록: 0.0s', {
+      fontFamily: 'GSC',
+      fontSize: '100px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
 
+    gameOverHighScoreText = scene.add.text(0, -220, '최고 기록: 0.0s', {
+      fontFamily: 'GSC',
+      fontSize: '100px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+  
+    const input = scene.add.dom(0, -60).createFromHTML(`
+      <input type="text" id="nickname" placeholder="닉네임 입력"
+        style="font-family:GSC; font-size:24px; width:200px; text-align:center;">
+    `);
+  
+    const retryBtn = scene.add.text(150, 60, '다시하기', {
+      fontFamily: 'GSC',
+      fontSize: '60px',
+      backgroundColor: '#222',
+      color: '#fff',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive();
+  
+    retryBtn.on('pointerdown', () => {
+      obstacles.clear(true, true);
+      scene.physics.world.resume();
+      gameOverUI.setVisible(false);
+      player.setPosition(600, 600);
+      player.setVelocity(0, 0);  
+    
+      timerText?.destroy();
+      isGameOver = false;
+      timerText = scene.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
+    startTime = scene.time.now;
+    scene.time.delayedCall(600, () => 
+    {
+      startUI.setVisible(false);
+      isGameStarted = true;
+      patternManager(patternList, scene);
+    })
+    });
+  
+    const submitBtn = scene.add.text(150, 180, '등록하기', {
+      fontFamily: 'GSC',
+      fontSize: '60px',
+      backgroundColor: '#222',
+      color: '#fff',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive();
+  
+    submitBtn.on('pointerdown', () => {
+      const nickname = document.getElementById('nickname')?.value || '익명';
+      const score = elapsedTime;
+      console.log(`[등록] ${nickname} - ${score}s`);
+    });
+
+    const rankingBtn = scene.add.text(-150, 180, '랭킹보기', {
+      fontFamily: 'GSC',
+      fontSize: '60px',
+      backgroundColor: '#222',
+      color: '#fff',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive();
+  
+    rankingBtn.on('pointerdown', () => {
+      alert('아직 랭킹기능이 없습니다.');
+    });
+
+    const homeBtn = scene.add.text(-150, 60, '시작화면', {
+      fontFamily: 'GSC',
+      fontSize: '60px',
+      backgroundColor: '#222',
+      color: '#fff',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive();
+  
+    homeBtn.on('pointerdown', () => {
+      gameOverUI.setVisible(false);
+      restartGame(); // 🚨 이 함수도 외부에 정의돼 있어야 합니다!
+      scene.physics.world.resume(); 
+    });
+  
+    gameOverUI.add([bg, gameOverScoreText, gameOverHighScoreText,
+      input, retryBtn, submitBtn, rankingBtn, homeBtn]);
+  }
+  
+  function showGameOverUI(scene) {
+    gameOverScoreText.setText(`현재 기록: ${elapsedTime}s`);
+
+    const best = getBestRecord();
+    if (elapsedTime > best) {
+      setBestRecord(elapsedTime);
+    }
+    gameOverHighScoreText.setText(`최고 기록: ${Math.max(elapsedTime, best)}s`);
+
+    scene.children.bringToTop(gameOverUI);
+    gameOverUI.setVisible(true);
+    scene.tweens.add({
+      targets: gameOverUI,
+      alpha: 1,
+      duration: 500,
+      ease: 'Sine.easeOut'
+    });
+  }
+
+  function getBestRecord() {
+    return parseFloat(localStorage.getItem('bestRecord') || '0');
+  }
+  
+  function setBestRecord(score) {
+    const best = getBestRecord();
+    if (elapsedTime > best) {
+      localStorage.setItem('bestRecord', elapsedTime);
+    }
+  }
+  
 }
 
 function setPichuAnimationSpeed(player, targetFrameRate) {
@@ -313,7 +454,9 @@ function update(time, delta) {
   if (!isGameStarted) {}
   else if (!isGameOver)
   {
-    timerText.setText(((time - startTime) / 1000).toFixed(1) + 's');
+    elapsedTime = ((time - startTime)/1000).toFixed(1);
+    timerText.setText(elapsedTime + 's');
+    
   }
   movePlayer(this); // this는 Phaser.Scene
   
@@ -322,7 +465,7 @@ function update(time, delta) {
 
 function spawnBasicShooter() {
   // 원의 반지름 설정
-  const radius = 900;
+  const radius = 650;
   
   // 0부터 2π 사이의 랜덤 각도 계산
   const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
@@ -708,7 +851,6 @@ const patternList = [
     ['octoBurst', 138],
     ['octoBurst', 140]
 ]
-
 
 
 
