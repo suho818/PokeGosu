@@ -313,10 +313,10 @@ function create() {
       color: '#ffffff'
     }).setOrigin(0.5);
   
-    const input = scene.add.dom(0, -60).createFromHTML(`
-      <input type="text" id="nickname" placeholder="닉네임 입력"
-        style="font-family:GSC; font-size:24px; width:200px; text-align:center;">
-    `);
+    //const input = scene.add.dom(0, -60).createFromHTML(`
+      //<input type="text" id="nickname" placeholder="닉네임 입력"
+        //style="font-family:GSC; font-size:24px; width:200px; text-align:center;">
+    //`);
   
     const retryBtn = scene.add.text(150, 60, '다시하기', {
       fontFamily: 'GSC',
