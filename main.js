@@ -390,7 +390,7 @@ function create() {
   }
   
   function showGameOverUI(scene) {
-    gameOverScoreText.setText(`현재 기록: ${elapsedTime}s`);
+    gameOverScoreText.setText(`현재 기록: ${elapsedTime.toFixed(1)}s`);
 
     const best = getBestRecord();
     if (elapsedTime > best) {
@@ -454,8 +454,8 @@ function update(time, delta) {
   if (!isGameStarted) {}
   else if (!isGameOver)
   {
-    elapsedTime = ((time - startTime)/1000).toFixed(1);
-    timerText.setText(elapsedTime + 's');
+    elapsedTime = (time - startTime)/1000;
+    timerText.setText(elapsedTime.toFixed(1) + 's');
     
   }
   movePlayer(this); // this는 Phaser.Scene
