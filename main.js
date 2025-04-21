@@ -28,10 +28,15 @@ const config = {
     preload,
     create,
     update
+  },
+  parent: 'phaser-container',
+  dom: {
+    createContainer: true, // dom요소를 사용하기 위해 반드시 필요
+    behindCanvas: false
   }
 };
 
-let player, cursors, timerText, startTime, startUI, 
+let player, cursors, timerText, startTime, startUI, username, ssid, 
 isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText;
 let obstacles;
 let elapsedTime;
@@ -42,8 +47,6 @@ function isMobileDevice() {
 
 function preload() {
   this.load.image('dpad', 'image/dpad.png');
-  this.load.image('ball-left', 'image/cuteghost2.png');
-  this.load.image('ball-right', 'image/cuteghost-right2.png');
   this.load.image('emonga-left', 'image/emonga-left.png');
   this.load.image('emonga-right', 'image/emonga-right.png');
   this.load.image('pichu-left', 'image/pichu-left.png');
@@ -76,6 +79,11 @@ function preload() {
   this.load.image('obstacle-left', 'image/cuteghost9.png');
   this.load.image('obstacle-right', 'image/cuteghost-right9.png');
   this.load.image('monster-ball', 'image/monster-ball.png')
+  this.load.scenePlugin({
+    key: 'rexuiplugin',
+    url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+    sceneKey: 'rexUI'
+  })
 }
 let player_img = {
   left: 'pichu-left',
@@ -83,6 +91,7 @@ let player_img = {
 }
 
 function create() {
+  
   this.anims.create({
     key: 'pichu',
     frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 47 }),
@@ -134,7 +143,7 @@ function create() {
   isGameStarted = false;
   isGameOver = false;
   startUI = this.add.container(0, 0);
-  createGameOverUI(this);
+  
   const title = this.add.text(600, 600 - 450, '포케고수', {
     fontFamily: 'GSC',
     fontSize: '120px',
@@ -191,12 +200,15 @@ function create() {
         duration: 500,
         ease: 'Back.easeIn'
       });
-      timerText = this.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
+
+      
+      timerText = this.add.text(1030, 20, '0.0s', { 
+        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: 'left' });
       startTime = this.time.now;
       isGameStarted = true;
       this.time.delayedCall(600, () => 
       {
-        startUI.setVisible(false);
+        startUI.setVisible(true);
         
         patternManager(patternList, this);
       })
@@ -237,8 +249,23 @@ function create() {
   statisticBtn.on('pointerdown', () => {
     alert('아직 통계기능이 없습니다.');
   });
+  const userNameField = this.add.text(50, 20, `${username}`, {
+    fontFamily: 'GSC',
+    fontSize: '40px',
+    color: '#000',
+    align: 'left',
+    backgroundColor: 'transparent'
+  }).setOrigin(0);
 
-  startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn]);
+  const version = this.add.text(50, 1140, "v0.1.0", {
+    fontFamily: 'GSC',
+    fontSize: '40px',
+    color: '#000',
+    align: 'left',
+    backgroundColor: 'transparent'
+  }).setOrigin(0);
+  
+  startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn, userNameField]);
   createGameOverUI(this);
   
 
@@ -271,6 +298,7 @@ function create() {
 
     statisticBtn.setPosition(600 - 180, 600 + 70);
     statisticBtn.setAlpha(1);
+
   }
 
   function restartGame() {
@@ -290,6 +318,9 @@ function create() {
     
   }
 
+ 
+
+  
   function createGameOverUI(scene) {
     const centerX = 600;
     const centerY = 600;
@@ -312,16 +343,13 @@ function create() {
       fontSize: '100px',
       color: '#ffffff'
     }).setOrigin(0.5);
+
   
-    const input = scene.add.dom(0, -60).createFromHTML(`
-      <input type="text" id="nickname" placeholder="닉네임 입력"
-        style="font-family:GSC; font-size:24px; width:200px; text-align:center;">
-    `);
   
     const retryBtn = scene.add.text(150, 60, '다시하기', {
       fontFamily: 'GSC',
       fontSize: '60px',
-      backgroundColor: '#222',
+      backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
@@ -335,11 +363,12 @@ function create() {
     
       timerText?.destroy();
       isGameOver = false;
-      timerText = scene.add.text(1000, 20, '0.0s', { fontSize: '40px', fill: '#000000', fontFamily: 'GSC' });
+      timerText = scene.add.text(1030, 20, '0.0s', { 
+        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: "right" });
     startTime = scene.time.now;
     scene.time.delayedCall(600, () => 
     {
-      startUI.setVisible(false);
+      
       isGameStarted = true;
       patternManager(patternList, scene);
     })
@@ -348,21 +377,20 @@ function create() {
     const submitBtn = scene.add.text(150, 180, '등록하기', {
       fontFamily: 'GSC',
       fontSize: '60px',
-      backgroundColor: '#222',
+      backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
   
     submitBtn.on('pointerdown', () => {
-      const nickname = document.getElementById('nickname')?.value || '익명';
-      const score = elapsedTime;
-      console.log(`[등록] ${nickname} - ${score}s`);
+      const score = elapsedTime.toFixed(1);
+      console.log(`[등록] ${username} - ${score}s`);
     });
 
     const rankingBtn = scene.add.text(-150, 180, '랭킹보기', {
       fontFamily: 'GSC',
       fontSize: '60px',
-      backgroundColor: '#222',
+      backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
@@ -374,7 +402,7 @@ function create() {
     const homeBtn = scene.add.text(-150, 60, '시작화면', {
       fontFamily: 'GSC',
       fontSize: '60px',
-      backgroundColor: '#222',
+      backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
@@ -386,7 +414,7 @@ function create() {
     });
   
     gameOverUI.add([bg, gameOverScoreText, gameOverHighScoreText,
-      input, retryBtn, submitBtn, rankingBtn, homeBtn]);
+       retryBtn, submitBtn, rankingBtn, homeBtn]);
   }
   
   function showGameOverUI(scene) {
@@ -398,6 +426,7 @@ function create() {
     }
     gameOverHighScoreText.setText(`최고 기록: ${Math.max(elapsedTime, best).toFixed(1)}s`);
 
+    scene.children.bringToTop(startUI);
     scene.children.bringToTop(gameOverUI);
     gameOverUI.setVisible(true);
     scene.tweens.add({
@@ -418,6 +447,7 @@ function create() {
       localStorage.setItem('bestRecord', elapsedTime);
     }
   }
+
   
 }
 
@@ -465,7 +495,7 @@ function update(time, delta) {
 
 function spawnBasicShooter() {
   // 원의 반지름 설정
-  const radius = 650;
+  const radius = 850;
   
   // 0부터 2π 사이의 랜덤 각도 계산
   const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
@@ -483,7 +513,7 @@ function spawnBasicShooter() {
   const texture = dx < 0 ? 'monster-ball' : 'monster-ball'; // 나중에 텍스처 다르게 설정 가능
 
   // 발사 속도 설정
-  const speed = 250;
+  const speed = 320;
 
   // 몬스터 생성 (기존 로직 그대로)
   createBall('monster-ball', x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
@@ -494,13 +524,13 @@ function spawnOctoBurst() {
   let offset = Phaser.Math.Between(0,44);
 
   for (let i = 0; i < 8; i++) {
-    const x = 600+800*Math.cos(Phaser.Math.DegToRad(offset + i*45));
-    const y = 600+800*Math.sin(Phaser.Math.DegToRad(offset + i*45));;
+    const x = 600+850*Math.cos(Phaser.Math.DegToRad(offset + i*45));
+    const y = 600+850*Math.sin(Phaser.Math.DegToRad(offset + i*45));;
 
     const dx = player.x - x;
     const dy = player.y - y;
     const angle = Math.atan2(dy, dx);
-    const speed = 250;
+    const speed = 320;
     createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
     
 }
@@ -508,7 +538,7 @@ function spawnOctoBurst() {
 
 function spawnLineBurst(n) {
   const side = Phaser.Math.Between(0, 3);
-  const speed = 250;
+  const speed = 320;
   let x, y;
 
   switch (side) {
@@ -739,7 +769,7 @@ function createBall (img, x, y, vx, vy, scale = 0.08, flipX = false, flipY = fal
 let patternEvents = [];
 
 function movePlayer(scene) {
-  const speed = 300;
+  const speed = 400;
   //const player = scene.player;
   const joystick = scene.joystick;
   //const cursors = scene.cursors;
@@ -856,10 +886,30 @@ const patternList = [
 
 
 
+function initializeIdentity() {
+  if(!localStorage.getItem('ssid'))
+  {
+    ssid = crypto.randomUUID();
+    localStorage.setItem('ssid', ssid);
+  }
+  else{
+    ssid = localStorage.getItem('ssid');
+  }
+  if(!localStorage.getItem('username')) {
+    username = '피츄' + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem('username', username);
+    console.log(username);
+  }
+  else{
+    username = localStorage.getItem('username');
+  }
+}
+
 
 
 
 document.fonts.ready.then(() => {
+  initializeIdentity();
   // ✅ 폰트가 전부 로드된 이후 Phaser 게임 시작
   game = new Phaser.Game(config);
   setupDpad();

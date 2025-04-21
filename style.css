@@ -20,10 +20,16 @@ body, canvas {
   left: 50%;
   transform: translateX(-50%);
     margin: 0 auto;
-    z-index: 0;
+    z-index: -1;
       pointer-events: auto;
   touch-action: none;
   user-select: none;
+  }
+
+  .dom-overlay {
+    z-index: 10;
+    position: absolute;
+    pointer-events: auto;
   }
   
   #startButton {
