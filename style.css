@@ -3,7 +3,7 @@
 body {
     margin: 0;
     overflow: hidden;         /* ✅ 스크롤 방지 */
-    touch-action: none;       /* ✅ 터치 스크롤 방지 */
+    touch-action: pan-x pan-y;       /* ✅ 터치 스크롤 방지 */
      user-select: none;       /* 텍스트 선택 방지 */
   -webkit-user-drag: none; /* 사파리용 이미지 드래그 방지 */
   }
