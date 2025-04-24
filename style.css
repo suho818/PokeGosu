@@ -26,6 +26,7 @@ body, canvas {
   user-select: none;
   }
 
+
   .dom-overlay {
     z-index: 10;
     position: absolute;

@@ -91,7 +91,7 @@ let player_img = {
 }
 
 function create() {
-  
+  this.scale.setGameSize(1200,1200);
   this.anims.create({
     key: 'pichu',
     frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 47 }),
@@ -393,7 +393,7 @@ function create() {
       backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive();
+    }).setOrigin(0.5).setInteractive({useHandCursor: true});
   
     rankingBtn.on('pointerdown', () => {
       alert('아직 랭킹기능이 없습니다.');
@@ -563,188 +563,63 @@ function spawnLineBurst(n) {
   }
 }
 
-
 let joystick = {
   active: false,
   delta: { x: 0, y: 0 }
 };
 
-const stick = document.getElementById('joystickStick');
-const base = document.getElementById('joystickBase');
-const container = document.getElementById('joystickContainer');
+function setupDynamicJoystick() {
+  const base = document.getElementById('joystickBase');
+  const stick = document.getElementById('joystickStick');
+  const container = document.getElementById('dynamicJoystick');
+  const maxDist = 50;
 
-function setupJoystick() {
-  if (!isMobileDevice()) return;
+  let origin = { x: 0, y: 0 };
 
-  container.style.display = 'block';
+  function setPosition(el, x, y) {
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+  }
 
   document.body.addEventListener('touchstart', (e) => {
-    joystick.active = true;
     const touch = e.touches[0];
-    const baseRect = base.getBoundingClientRect();
-    const centerX = baseRect.left + baseRect.width / 2;
-    const centerY = baseRect.top + baseRect.height / 2;
+    origin = { x: touch.clientX, y: touch.clientY };
 
-    // 방향 계산
-    maxDist = 30;
-    joystick.delta = {
-      x: touch.clientX - centerX,
-      y: touch.clientY - centerY
-    }
-    const angle = Math.atan2(joystick.delta.y, joystick.delta.x);
-    const dist = Math.min(maxDist, Math.hypot(joystick.delta.x, joystick.delta.y));
-    stick.style.left = `${30 + Math.cos(angle) * dist}%`;
-    stick.style.top = `${30 + Math.sin(angle) * dist}%`;
+    setPosition(base, origin.x, origin.y);
+    setPosition(stick, origin.x, origin.y);
+    base.style.display = 'block';
+    stick.style.display = 'block';
+
+    joystick.active = true;
   });
 
   document.body.addEventListener('touchmove', (e) => {
     if (!joystick.active) return;
-    const touch = e.touches[0];
-    const baseRect = base.getBoundingClientRect();
-    const centerX = baseRect.left + baseRect.width / 2;
-    const centerY = baseRect.top + baseRect.height / 2;
 
-    // 방향 계산
-    maxDist = 30;
+    const touch = e.touches[0];
+    const dx = touch.clientX - origin.x;
+    const dy = touch.clientY - origin.y;
+
+    const dist = Math.min(Math.hypot(dx, dy), maxDist);
+    const angle = Math.atan2(dy, dx);
+
+    const stickX = origin.x + Math.cos(angle) * dist;
+    const stickY = origin.y + Math.sin(angle) * dist;
+
+    setPosition(stick, stickX, stickY);
+
     joystick.delta = {
-      x: touch.clientX - centerX,
-      y: touch.clientY - centerY
-    }
-    const angle = Math.atan2(joystick.delta.y, joystick.delta.x);
-    const dist = Math.min(maxDist, Math.hypot(joystick.delta.x, joystick.delta.y));
-    stick.style.left = `${30 + Math.cos(angle) * dist}%`;
-    stick.style.top = `${30 + Math.sin(angle) * dist}%`;
+      x: Math.cos(angle) * dist,
+      y: Math.sin(angle) * dist
+    };
   });
 
   document.body.addEventListener('touchend', () => {
     joystick.active = false;
     joystick.delta = { x: 0, y: 0 };
-    stick.style.left = '30%';
-    stick.style.top = '30%';
+    base.style.display = 'none';
+    stick.style.display = 'none';
   });
-}
-
-function setupDpad() {
-  const dpad = document.getElementById('dpadOverlay');
-  if (!isMobileDevice()) {
-    dpad.style.display = 'none';
-    return;
-  }
-  
-  dpad.addEventListener('contextmenu', e => e.preventDefault());
-  const highlight = document.getElementById('dpadHighlight');
-  const dpadSize = 200;
-const imageScale = 512; // 원본 이미지 기준
-
-const directionPositions = {
-  up: [256, 85],
-  down: [256, 427],
-  left: [85, 256],
-  right: [427, 256],
-  center: [256, 256]
-};
-function showHighlight(direction) {
-  if (!directionPositions[direction]) return;
-
-  const [imgX, imgY] = directionPositions[direction];
-  const scale = dpadSize / imageScale;
-
-  highlight.style.left = `${imgX * scale - 30}px`;
-  highlight.style.top = `${imgY * scale - 30}px`;
-  highlight.style.display = 'block';
-}
-
-function hideHighlight() {
-  highlight.style.display = 'none';
-}
-function updateDpadDirection(e) {
-  const rect = dpad.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const dir = getDirectionFromDpad(x, y, dpadSize);
-
-  game.scene.keys.default.dpadDirection = dir;
-  showHighlight(dir); // ✅ 방향 강조 시각 효과
-}
-dpad.addEventListener('pointerdown', updateDpadDirection);
-dpad.addEventListener('pointermove', updateDpadDirection);
-dpad.addEventListener('pointerup', () => {
-  game.scene.keys.default.dpadDirection = null;
-  hideHighlight(); // ✅ 하이라이트 숨기기
-});
-
-const dpadImg = document.getElementById('dpadImage');
-
-// 눌렀을 때 시각 효과 ON
-dpadImg.addEventListener('pointerdown', () => {
-  dpadImg.classList.add('pressed');
-  if (navigator.vibrate) {
-    navigator.vibrate(30); // 눌렀을 때 짧게 진동
-  }
-});
-
-// 뗐을 때 시각 효과 OFF
-['pointerup', 'pointercancel', 'pointerleave'].forEach(event => {
-  dpadImg.addEventListener(event, () => {
-    dpadImg.classList.remove('pressed');
-  });
-});
-}
-
-let lastTap = 0;
-
-document.getElementById('dpadImage').addEventListener('touchend', (e) => {
-  const now = Date.now();
-  if (now - lastTap < 400) {
-    e.preventDefault();         // ✅ 더블탭 확대 차단
-  }
-  lastTap = now;
-});
-
-
-function getDirectionFromDpad(x, y, size) {
-  const cell = size / 3;
-  const col = Math.floor(x / cell);
-  const row = Math.floor(y / cell);
-
-  if (col === 1 && row === 1) {
-    const offsetX = x % cell;
-    const offsetY = y % cell;
-    const margin = cell * 0.3;
-    if (
-      offsetX > margin && offsetX < cell - margin &&
-      offsetY > margin && offsetY < cell - margin
-    ) return 'center';
-    return null;
-  }
-
-  const map = {
-    '0,0': 'upLeft',
-    '0,1': 'left',
-    '0,2': 'downLeft',
-    '1,0': 'up',
-    '1,2': 'down',
-    '2,0': 'upRight',
-    '2,1': 'right',
-    '2,2': 'downRight',
-  };
-
-  return map[`${col},${row}`] || null;
-}
-
-
-function getDpadVector(direction) {
-  const map = {
-    up: [0, -1],
-    down: [0, 1],
-    left: [-1, 0],
-    right: [1, 0],
-    upLeft: [-1, -1],
-    upRight: [1, -1],
-    downLeft: [-1, 1],
-    downRight: [1, 1],
-  };
-  return map[direction] || [0, 0];
 }
 
 
@@ -771,7 +646,6 @@ let patternEvents = [];
 function movePlayer(scene) {
   const speed = 400;
   //const player = scene.player;
-  const joystick = scene.joystick;
   //const cursors = scene.cursors;
   const isMobile = isMobileDevice();
   const threshold = 10;
@@ -788,14 +662,10 @@ function movePlayer(scene) {
     }
 
   // 2️⃣ D-Pad 입력
-  } else if (isMobile && scene.dpadDirection) {
-    const [dx, dy] = getDpadVector(scene.dpadDirection);
-    const norm = dx !== 0 || dy !== 0 ? 1 / Math.hypot(dx, dy) : 0;
-    vx = dx * speed * norm;
-    vy = dy * speed * norm;
+  } 
 
   // 3️⃣ PC 키보드
-  } else {
+  else {
     let dx = 0, dy = 0;
     if (cursors.left.isDown) dx = -1;
     if (cursors.right.isDown) dx = 1;
@@ -912,5 +782,6 @@ document.fonts.ready.then(() => {
   initializeIdentity();
   // ✅ 폰트가 전부 로드된 이후 Phaser 게임 시작
   game = new Phaser.Game(config);
-  setupDpad();
+  //setupDpad();
+  setupDynamicJoystick();
 });

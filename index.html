@@ -18,15 +18,11 @@
   
 <div id="phaser-container"></div>
 
-  <div id="joystickContainer" style="display:none;">
-    <div id="joystickBase">
-      <div id="joystickStick"></div>
-    </div>
-  </div>
-  <div id="dpadOverlay">
-    <img id="dpadImage" src="image/dpad.png"/>
-    <div id="dpadHighlight"></div> <!-- ✅ 강조용 highlight 원 -->
-  </div>
+  <div id="dynamicJoystick" style="position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000;">
+    <div id="joystickBase" style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0,0,0,0.2); position: absolute; transform: translate(-50%, -50%); display: none;"></div>
+    <div id="joystickStick" style="width: 40px; height: 40px; border-radius: 50%; background: #000; position: absolute; transform: translate(-50%, -50%); display: none;"></div>
+</div>
+  
   <script src="main.js"></script>
 </body>
 </html>
