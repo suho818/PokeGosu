@@ -36,7 +36,7 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime, startUI, username, ssid, 
+let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0,
 isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText;
 let obstacles;
 let elapsedTime;
@@ -281,6 +281,16 @@ function create() {
     if (navigator.vibrate) {
       navigator.vibrate(30); // 눌렀을 때 짧게 진동
     }
+    const data = {
+      ssid: ssid,
+      nickname: username,
+      time: elapsedTime,
+      avoid_num: avoid_num,
+      distance: distance
+    }
+    sendData(data);
+    distance = 0;
+    avoid_num = 0;
     showGameOverUI(this);
 });
   function resetStartUIPosition() {
@@ -659,6 +669,7 @@ function movePlayer(scene) {
     if (norm > threshold) {
       vx = (joystick.delta.x / norm) * speed;
       vy = (joystick.delta.y / norm) * speed;
+      distance += 1;
     }
 
   // 2️⃣ D-Pad 입력
@@ -675,6 +686,7 @@ function movePlayer(scene) {
     const norm = dx !== 0 || dy !== 0 ? 1 / Math.hypot(dx, dy) : 0;
     vx = dx * speed * norm;
     vy = dy * speed * norm;
+    if (norm!=0)distance += 1;
   }
 
   // 좌우 반전 방향 처리
@@ -773,6 +785,20 @@ function initializeIdentity() {
   else{
     username = localStorage.getItem('username');
   }
+}
+
+
+async function sendData(data) {
+  const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app', {  // 서버 주소 + 엔드포인트
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await response.json();
+  console.log(result);
 }
 
 
