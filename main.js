@@ -234,9 +234,7 @@ function create() {
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
 
-  rankingBtn.on('pointerdown', () => {
-    alert('아직 랭킹기능이 없습니다.');
-  });
+  rankingBtn.on('pointerdown', showTop5Ranking);
 
   const statisticBtn = this.add.text(600 + 180, 670, '통계', {
     fontFamily: 'GSC',
