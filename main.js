@@ -405,9 +405,7 @@ function create() {
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive({useHandCursor: true});
   
-    rankingBtn.on('pointerdown', () => {
-      alert('아직 랭킹기능이 없습니다.');
-    });
+    rankingBtn.on('pointerdown', showTop5Ranking);
 
     const homeBtn = scene.add.text(-150, 60, '시작화면', {
       fontFamily: 'GSC',
@@ -801,6 +799,22 @@ async function sendData(data) {
   console.log(result);
 }
 
+async function showTop5Ranking() {
+  try {
+    const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking');
+    const rankings = await response.json();
+
+    let message = '🏆 TOP 5 랭킹 🏆\n\n';
+    rankings.forEach((player, idx) => {
+      message += `${idx + 1}등: ${player.nickname} (${player.time.toFixed(1)}s)\n`;
+    });
+
+    alert(message);
+  } catch (err) {
+    console.error('랭킹 불러오기 실패:', err);
+    alert('랭킹을 불러오지 못했습니다.');
+  }
+}
 
 
 
