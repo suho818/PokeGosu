@@ -789,7 +789,7 @@ function initializeIdentity() {
 
 
 async function sendData(data) {
-  const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app', {  // 서버 주소 + 엔드포인트
+  const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/submit', {  // 서버 주소 + 엔드포인트
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
