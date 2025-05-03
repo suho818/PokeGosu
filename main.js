@@ -36,8 +36,8 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0,
-isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText;
+let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0, pokedex = 172,
+isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI;
 let obstacles;
 let elapsedTime;
 
@@ -46,7 +46,7 @@ function isMobileDevice() {
 }
 
 function preload() {
-  this.load.image('dpad', 'image/dpad.png');
+  this.load.image('editicon', 'image/editicon.png');
   this.load.image('emonga-left', 'image/emonga-left.png');
   this.load.image('emonga-right', 'image/emonga-right.png');
   this.load.image('pichu-left', 'image/pichu-left.png');
@@ -255,6 +255,12 @@ function create() {
     backgroundColor: 'transparent'
   }).setOrigin(0);
 
+  const editIcon = this.add.image(userNameField.x - 50, 20, 'editicon')
+  .setOrigin(0).setInteractive().setScale(0.045)
+  .on('pointerdown', () => {
+    showNicknameEditUI(this);
+  });
+
   const version = this.add.text(50, 1140, "v0.1.0", {
     fontFamily: 'GSC',
     fontSize: '40px',
@@ -264,6 +270,8 @@ function create() {
   }).setOrigin(0);
   
   startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn, userNameField]);
+  createNicknameEditUI(this);
+  nicknameEditUI.setVisible(false);
   createGameOverUI(this);
   
 
@@ -284,7 +292,8 @@ function create() {
       nickname: username,
       time: elapsedTime,
       avoid_num: avoid_num,
-      distance: distance
+      distance: distance,
+      pokedex: pokedex
     }
     sendData(data);
     distance = 0;
@@ -326,7 +335,72 @@ function create() {
     
   }
 
- 
+  
+  function createNicknameEditUI(scene) {
+    if (nicknameEditUI && nicknameEditUI.visible) return; // 이미 열려있으면 무시
+  
+    const container = scene.add.container(600, 600).setDepth(1000);
+    nicknameEditUI = container;
+  
+    // 반투명 배경
+    const bg = scene.add.rectangle(0, 0, 500, 300, 0x000000, 0.8)
+      .setStrokeStyle(4, 0xffffff)
+      .setOrigin(0.5);
+  
+    // 타이틀
+    const title = scene.add.text(0, -100, '닉네임 수정', {
+      fontFamily: 'GSC',
+      fontSize: '40px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+  
+    // 입력 필드
+    const inputDOM = scene.add.dom(0, 0).createFromHTML(`
+      <input type="text" id="nicknameInput" placeholder="새 닉네임 입력"
+        style="font-family:GSC; font-size:24px; width:250px; padding:10px;
+               text-align:center; border-radius:10px; border:2px solid #fff;">
+    `);
+    inputDOM.setOrigin(0.5);
+  
+    // 확인 버튼
+    const confirmBtn = scene.add.text(0, 80, '확인', {
+      fontFamily: 'GSC',
+      fontSize: '32px',
+      color: '#fff',
+      backgroundColor: '#333',
+      padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setInteractive();
+  
+    confirmBtn.on('pointerdown', () => {
+      const inputEl = document.getElementById('nicknameInput');
+      const newName = inputEl?.value.trim();
+      console.log(newName);
+      if (newName) {
+        localStorage.setItem('nickname', newName);
+        if (userNameField) {
+          userNameField.setText(newName);
+          username = newName;
+          // editIcon 위치 조정
+          editIcon.setX(userNameField.x + userNameField.width + 20);
+        }
+      }
+      container.setVisible(false); // 닫기
+      inputEl?.remove(); // DOM 제거
+    });
+  
+    container.add([bg, title, inputDOM, confirmBtn]);
+  }
+  
+  function showNicknameEditUI(scene) {
+    scene.children.bringToTop(nicknameEditUI);
+    nicknameEditUI.setVisible(true);
+    scene.tweens.add({
+      targets: nicknameEditUI,
+      alpha: 1,
+      duration: 500,
+      ease: 'Sine.easeOut'
+    });
+  }
 
   
   function createGameOverUI(scene) {
