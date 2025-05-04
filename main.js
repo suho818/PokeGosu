@@ -8,7 +8,7 @@ const config = {
   backgroundColor: '#fffdd0',
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.NO_CENTER,
+    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
     max: {
       width: Math.min(screenHeight,screenWidth),
       height: Math.min(screenHeight,screenWidth)
@@ -32,12 +32,12 @@ const config = {
   parent: 'phaser-container',
   dom: {
     createContainer: true, // dom요소를 사용하기 위해 반드시 필요
-    behindCanvas: false
+    //behindCanvas: false
   }
 };
 
 let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0, pokedex = 172,
-isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI;
+isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI, inputDOM;
 let obstacles;
 let elapsedTime;
 
@@ -46,6 +46,10 @@ function isMobileDevice() {
 }
 
 function preload() {
+  	
+  this.load.plugin('rexinputtextplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexinputtextplugin.min.js', true);
+
+
   this.load.image('editicon', 'image/editicon.png');
   this.load.image('emonga-left', 'image/emonga-left.png');
   this.load.image('emonga-right', 'image/emonga-right.png');
@@ -79,11 +83,6 @@ function preload() {
   this.load.image('obstacle-left', 'image/cuteghost9.png');
   this.load.image('obstacle-right', 'image/cuteghost-right9.png');
   this.load.image('monster-ball', 'image/monster-ball.png')
-  this.load.scenePlugin({
-    key: 'rexuiplugin',
-    url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
-    sceneKey: 'rexUI'
-  })
 }
 let player_img = {
   left: 'pichu-left',
@@ -202,10 +201,11 @@ function create() {
       });
 
       
-      timerText = this.add.text(1030, 20, '0.0s', { 
-        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: 'left' });
+      timerText = this.add.text(1180, 20, '0.0s', { 
+        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: 'left' }).setOrigin(1,0);
       startTime = this.time.now;
       isGameStarted = true;
+      editIcon.setVisible(0);
       this.time.delayedCall(600, () => 
       {
         startUI.setVisible(true);
@@ -247,7 +247,7 @@ function create() {
   statisticBtn.on('pointerdown', () => {
     alert('아직 통계기능이 없습니다.');
   });
-  const userNameField = this.add.text(50, 20, `${username}`, {
+  const userNameField = this.add.text(20, 20, `${username}`, {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -255,13 +255,13 @@ function create() {
     backgroundColor: 'transparent'
   }).setOrigin(0);
 
-  const editIcon = this.add.image(userNameField.x - 50, 20, 'editicon')
+  const editIcon = this.add.image(userNameField.x + userNameField.width + 10, 20, 'editicon')
   .setOrigin(0).setInteractive().setScale(0.045)
   .on('pointerdown', () => {
     showNicknameEditUI(this);
   });
 
-  const version = this.add.text(50, 1140, "v0.1.0", {
+  const version = this.add.text(20, 1140, "v0.3.0", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -274,9 +274,10 @@ function create() {
   nicknameEditUI.setVisible(false);
   createGameOverUI(this);
   
+ 
 
-
-  this.physics.add.overlap(player, obstacles, () => {
+//충돌 감지
+  this.physics.add.overlap(player, obstacles, () => { 
     isGameOver = true;
     this.physics.world.pause();
     patternEvents.forEach(timer =>
@@ -343,37 +344,56 @@ function create() {
     nicknameEditUI = container;
   
     // 반투명 배경
-    const bg = scene.add.rectangle(0, 0, 500, 300, 0x000000, 0.8)
+    const bg = scene.add.rectangle(0, 0, 700, 480, 0x000000, 0.85)
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5);
   
     // 타이틀
-    const title = scene.add.text(0, -100, '닉네임 수정', {
+    const title = scene.add.text(0, -180, '닉네임을 변경하시겠습니까?', {
       fontFamily: 'GSC',
-      fontSize: '40px',
+      fontSize: '50px',
       color: '#ffffff'
     }).setOrigin(0.5);
   
     // 입력 필드
-    const inputDOM = scene.add.dom(0, 0).createFromHTML(`
-      <input type="text" id="nicknameInput" placeholder="새 닉네임 입력"
-        style="font-family:GSC; font-size:24px; width:250px; padding:10px;
-               text-align:center; border-radius:10px; border:2px solid #fff;">
-    `);
-    inputDOM.setOrigin(0.5);
+    inputDOM = scene.add.rexInputText(0, -50, 500, 75, { 
+      id: 'nicknameInput',
+      placeholder: `${username}`,
+      maxLength: 10,
+      fontFamily: 'GSC',
+      fontSize: '45px',
+      backgroundColor: '#ffffff',
+      borderColor: '#ffffff',
+      borderRadius: 20,
+      color: '#000000'})
+    inputDOM.setOrigin(0.5, 0.5).setInteractive();
+  
+   
+    // 취소 버튼
+    const cancelBtn = scene.add.text(-80, 100, '취소', {
+      fontFamily: 'GSC',
+      fontSize: '45px',
+      color: '#fff',
+      backgroundColor: '#333',
+      padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setInteractive();
+  
+    cancelBtn.on('pointerdown', () => {
+      inputDOM.text = ''
+      container.setVisible(false); // 닫기
+    });
   
     // 확인 버튼
-    const confirmBtn = scene.add.text(0, 80, '확인', {
+    const confirmBtn = scene.add.text(80, 100, '변경', {
       fontFamily: 'GSC',
-      fontSize: '32px',
+      fontSize: '45px',
       color: '#fff',
       backgroundColor: '#333',
       padding: { x: 20, y: 10 }
     }).setOrigin(0.5).setInteractive();
   
     confirmBtn.on('pointerdown', () => {
-      const inputEl = document.getElementById('nicknameInput');
-      const newName = inputEl?.value.trim();
+      const newName = inputDOM.text;
       console.log(newName);
       if (newName) {
         localStorage.setItem('nickname', newName);
@@ -381,23 +401,25 @@ function create() {
           userNameField.setText(newName);
           username = newName;
           // editIcon 위치 조정
-          editIcon.setX(userNameField.x + userNameField.width + 20);
+          editIcon.setX(userNameField.x + userNameField.width + 10);
         }
       }
       container.setVisible(false); // 닫기
-      inputEl?.remove(); // DOM 제거
     });
   
-    container.add([bg, title, inputDOM, confirmBtn]);
+    container.add([bg, title, inputDOM, cancelBtn, confirmBtn]);
   }
   
   function showNicknameEditUI(scene) {
+    inputDOM.text = ''
+    inputDOM.placeholder = `${username}`
     scene.children.bringToTop(nicknameEditUI);
     nicknameEditUI.setVisible(true);
+    nicknameEditUI.setScale(0);
     scene.tweens.add({
       targets: nicknameEditUI,
-      alpha: 1,
-      duration: 500,
+      scale: 1,
+      duration: 300,
       ease: 'Sine.easeOut'
     });
   }
@@ -445,7 +467,7 @@ function create() {
     
       timerText?.destroy();
       isGameOver = false;
-      timerText = scene.add.text(1030, 20, '0.0s', { 
+      timerText = scene.add.text(1050, 20, '0.0s', { 
         fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: "right" });
     startTime = scene.time.now;
     scene.time.delayedCall(600, () => 
@@ -489,6 +511,7 @@ function create() {
   
     homeBtn.on('pointerdown', () => {
       gameOverUI.setVisible(false);
+      editIcon.setVisible(true);
       restartGame(); // 🚨 이 함수도 외부에 정의돼 있어야 합니다!
       scene.physics.world.resume(); 
     });

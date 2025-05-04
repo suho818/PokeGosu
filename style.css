@@ -11,28 +11,23 @@ body, canvas {
   /*-webkit-user-select: none;      /* 텍스트 드래그 방지 */
   -webkit-touch-callout: none;    /* 꾹 누르기 방지 */
   -webkit-tap-highlight-color: transparent; /* 터치 하이라이트 제거 */
-  touch-action: none;             /* 기본 제스처 차단 (팁: 아래 참고) */
+  touch-action: none;      
+  user-select: none;       /* 기본 제스처 차단 (팁: 아래 참고) */
 }
-  canvas {
-    display: block;
-      position: absolute;
-  top: 5%;  /* 👈 살짝 위로 올림 */
-  left: 50%;
-  transform: translateX(-50%);
+#phaser-container {
+  display: block;
+  
     margin: 0 auto;
     z-index: -1;
       pointer-events: auto;
-  touch-action: none;
-  user-select: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
   }
 
 
-  .dom-overlay {
-    z-index: 10;
-    position: absolute;
-    pointer-events: auto;
-  }
-  
+
+ 
   #startButton {
     position: absolute;
     top: 50%;
@@ -41,12 +36,7 @@ body, canvas {
     font-size: 24px;
     padding: 10px 20px;
   }
-  
-#phaser-container {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
+ 
   
 /* 기본 상태: 안 보임 */
 #dpadOverlay {
