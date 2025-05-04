@@ -37,7 +37,8 @@ const config = {
 };
 
 let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0, pokedex = 172,
-isGameStarted, isGameOver, gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI, inputDOM;
+isGameStarted, isGameOver, windowManager,
+gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI, inputDOM;
 let obstacles;
 let elapsedTime;
 
@@ -141,6 +142,7 @@ function create() {
   
   isGameStarted = false;
   isGameOver = false;
+  windowManager = 'nothing';
   startUI = this.add.container(0, 0);
   
   const title = this.add.text(600, 600 - 450, '포케고수', {
@@ -160,6 +162,8 @@ function create() {
   startBtn.on('pointerdown', () =>
     {
       if (isGameStarted) return;
+      if (windowManager != 'nothing') return;
+      isGameStarted = true;
       this.tweens.add({
         targets: title,
         y: title.y - 600,
@@ -170,7 +174,7 @@ function create() {
   
       this.tweens.add({
         targets: startBtn,
-        x: startBtn.x + 600,
+        x: startBtn.x + 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -178,7 +182,7 @@ function create() {
   
       this.tweens.add({
         targets: changeBtn,
-        x: startBtn.x - 600,
+        x: changeBtn.x - 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -186,7 +190,7 @@ function create() {
   
       this.tweens.add({
         targets: rankingBtn,
-        x: startBtn.x - 600,
+        x: rankingBtn.x - 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -194,7 +198,7 @@ function create() {
   
       this.tweens.add({
         targets: statisticBtn,
-        x: startBtn.x + 600,
+        x: statisticBtn.x + 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -204,7 +208,7 @@ function create() {
       timerText = this.add.text(1180, 20, '0.0s', { 
         fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: 'left' }).setOrigin(1,0);
       startTime = this.time.now;
-      isGameStarted = true;
+      
       editIcon.setVisible(0);
       this.time.delayedCall(600, () => 
       {
@@ -223,6 +227,8 @@ function create() {
   }).setOrigin(0.5).setInteractive();
 
   changeBtn.on('pointerdown', () => {
+    if (isGameStarted) return;
+    if (windowManager != 'nothing') return;
     alert('아직 포켓몬 교체를 할 수 없습니다.');
   });
 
@@ -234,7 +240,10 @@ function create() {
     padding: { x: 20, y: 10 }
   }).setOrigin(0.5).setInteractive();
 
-  rankingBtn.on('pointerdown', showTop5Ranking);
+  rankingBtn.on('pointerdown',  () => {
+    if (isGameStarted) return;
+    if (windowManager != 'nothing') return;
+    showTop5Ranking()});
 
   const statisticBtn = this.add.text(600 + 180, 670, '통계', {
     fontFamily: 'GSC',
@@ -245,6 +254,8 @@ function create() {
   }).setOrigin(0.5).setInteractive();
 
   statisticBtn.on('pointerdown', () => {
+    if (isGameStarted) return;
+    if (windowManager != 'nothing') return;
     alert('아직 통계기능이 없습니다.');
   });
   const userNameField = this.add.text(20, 20, `${username}`, {
@@ -277,7 +288,7 @@ function create() {
  
 
 //충돌 감지
-  this.physics.add.overlap(player, obstacles, () => { 
+  this.physics.add.overlap(player, obstacles, (player, obstacle) => { 
     isGameOver = true;
     this.physics.world.pause();
     patternEvents.forEach(timer =>
@@ -299,7 +310,9 @@ function create() {
     sendData(data);
     distance = 0;
     avoid_num = 0;
-    showGameOverUI(this);
+    animGameOver(this, obstacle);
+    this.time.delayedCall(2000, ()=>
+    showGameOverUI(this));
 });
   function resetStartUIPosition() {
     title.setPosition(600, 600 - 450);
@@ -344,7 +357,7 @@ function create() {
     nicknameEditUI = container;
   
     // 반투명 배경
-    const bg = scene.add.rectangle(0, 0, 700, 480, 0x000000, 0.85)
+    const bg = scene.add.rectangle(0, 0, 700, 480, 0xfbb917, 0.95)
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5);
   
@@ -352,6 +365,12 @@ function create() {
     const title = scene.add.text(0, -180, '닉네임을 변경하시겠습니까?', {
       fontFamily: 'GSC',
       fontSize: '50px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+
+    const explain = scene.add.text(0, -120, '※변경을 완료해도, 랭킹에 등록된 닉네임은 변하지 않습니다.', {
+      fontFamily: 'GSC',
+      fontSize: '30px',
       color: '#ffffff'
     }).setOrigin(0.5);
   
@@ -380,6 +399,7 @@ function create() {
   
     cancelBtn.on('pointerdown', () => {
       inputDOM.text = ''
+      windowManager = 'nothing';
       container.setVisible(false); // 닫기
     });
   
@@ -404,13 +424,16 @@ function create() {
           editIcon.setX(userNameField.x + userNameField.width + 10);
         }
       }
+      windowManager = 'nothing';
       container.setVisible(false); // 닫기
     });
   
-    container.add([bg, title, inputDOM, cancelBtn, confirmBtn]);
+    container.add([bg, title, explain, inputDOM, cancelBtn, confirmBtn]);
   }
   
   function showNicknameEditUI(scene) {
+    windowManager = 'nameEdit';
+    console.log(windowManager);
     inputDOM.text = ''
     inputDOM.placeholder = `${username}`
     scene.children.bringToTop(nicknameEditUI);
@@ -430,7 +453,7 @@ function create() {
     const centerY = 600;
   
     gameOverUI = scene.add.container(centerX, centerY).setVisible(false).setAlpha(1);
-  
+    gameOverUI.scale = 0;
     const bg = scene.add.rectangle(0, 0, 1000, 1000, 0xfbb917, 1)
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5)
@@ -462,6 +485,9 @@ function create() {
       obstacles.clear(true, true);
       scene.physics.world.resume();
       gameOverUI.setVisible(false);
+      gameOverUI.scale = 0;
+      player.scale = 1;
+      player.angle = 0;
       player.setPosition(600, 600);
       player.setVelocity(0, 0);  
     
@@ -511,6 +537,9 @@ function create() {
   
     homeBtn.on('pointerdown', () => {
       gameOverUI.setVisible(false);
+      gameOverUI.scale = 0;
+      player.scale = 1;
+      player.angle = 0;
       editIcon.setVisible(true);
       restartGame(); // 🚨 이 함수도 외부에 정의돼 있어야 합니다!
       scene.physics.world.resume(); 
@@ -534,11 +563,35 @@ function create() {
     gameOverUI.setVisible(true);
     scene.tweens.add({
       targets: gameOverUI,
-      alpha: 1,
-      duration: 500,
+      scale: 1,
+      duration: 300,
       ease: 'Sine.easeOut'
     });
   }
+
+  function animGameOver(scene, hit_obstacle) {
+    scene.tweens.add({
+      targets: player,
+      angle: -720,
+      x: hit_obstacle.x,
+      y: hit_obstacle.y,
+      scale: 0,
+      duration: 1500
+
+      })
+    obstacles.getChildren().forEach( obstacle => {
+      if (obstacle !== hit_obstacle) {
+        scene.tweens.add({
+          targets: obstacle,
+          x: obstacle.x + Phaser.Math.Between(-500, 500), 
+          y: obstacle.y + Phaser.Math.Between(1200, 3000),
+          duration: 1200,
+          ease: 'Back.easeIn'
+        })
+      }
+    })
+  }
+  
 
   function getBestRecord() {
     return parseFloat(localStorage.getItem('bestRecord') || '0');
@@ -596,75 +649,6 @@ function update(time, delta) {
   
 }
 
-function spawnBasicShooter() {
-  // 원의 반지름 설정
-  const radius = 850;
-  
-  // 0부터 2π 사이의 랜덤 각도 계산
-  const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-  
-  // 원 둘레 위에서 랜덤 위치 계산 (x, y)
-  const x = 600 + Math.cos(angle) * radius;  // 화면 중앙 (x: 600, y: 600)을 기준으로
-  const y = 600 + Math.sin(angle) * radius;
-
-  // 플레이어로 향하는 벡터 계산
-  const dx = player.x - x;
-  const dy = player.y - y;
-  const angleToPlayer = Math.atan2(dy, dx);
-
-  // 텍스처 선택 (왼쪽 또는 오른쪽)
-  const texture = dx < 0 ? 'monster-ball' : 'monster-ball'; // 나중에 텍스처 다르게 설정 가능
-
-  // 발사 속도 설정
-  const speed = 320;
-
-  // 몬스터 생성 (기존 로직 그대로)
-  createBall('monster-ball', x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
-}
-
-function spawnOctoBurst() {
-  const center = { x: player.x, y: player.y };
-  let offset = Phaser.Math.Between(0,44);
-
-  for (let i = 0; i < 8; i++) {
-    const x = 600+850*Math.cos(Phaser.Math.DegToRad(offset + i*45));
-    const y = 600+850*Math.sin(Phaser.Math.DegToRad(offset + i*45));;
-
-    const dx = player.x - x;
-    const dy = player.y - y;
-    const angle = Math.atan2(dy, dx);
-    const speed = 320;
-    createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
-    
-}
-}
-
-function spawnLineBurst(n) {
-  const side = Phaser.Math.Between(0, 3);
-  const speed = 320;
-  let x, y;
-
-  switch (side) {
-    case 0: x = 0; y = 600; break;         // 왼쪽
-    case 1: x = 1200; y = 600; break;       // 오른쪽
-    case 2: x = 600; y = 0; break;         // 위쪽
-    case 3: x = 600; y = 1200; break;       // 아래쪽
-  }
-  if (x==0 || x==1200) {
-  let x_dir = (600-x)/600
-  for (let i = 0; i < n; i++) {
-    y = 1200/(n+1)*(i+1);
-    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.08, flipX=!(x_dir+1));
-  }
-}
-  else if (y==0 || y==1200) {
-    let y_dir = (600-y)/600
-    for (let i = 0; i < n; i++) {
-      x = 1200/(n+1)*(i+1);
-      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.08);
-    }
-  }
-}
 
 let joystick = {
   active: false,
@@ -802,6 +786,79 @@ function movePlayer(scene) {
 }
 
 
+function spawnBasicShooter() {
+  // 원의 반지름 설정
+  const radius = 850;
+  
+  // 0부터 2π 사이의 랜덤 각도 계산
+  const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+  
+  // 원 둘레 위에서 랜덤 위치 계산 (x, y)
+  const x = 600 + Math.cos(angle) * radius;  // 화면 중앙 (x: 600, y: 600)을 기준으로
+  const y = 600 + Math.sin(angle) * radius;
+
+  // 플레이어로 향하는 벡터 계산
+  const dx = player.x - x;
+  const dy = player.y - y;
+  const angleToPlayer = Math.atan2(dy, dx);
+
+  // 텍스처 선택 (왼쪽 또는 오른쪽)
+  const texture = dx < 0 ? 'monster-ball' : 'monster-ball'; // 나중에 텍스처 다르게 설정 가능
+
+  // 발사 속도 설정
+  const speed = 320;
+
+  // 몬스터 생성 (기존 로직 그대로)
+  createBall('monster-ball', x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
+}
+
+function spawnOctoBurst() {
+  const center = { x: player.x, y: player.y };
+  let offset = Phaser.Math.Between(0,44);
+
+  for (let i = 0; i < 8; i++) {
+    const x = 600+850*Math.cos(Phaser.Math.DegToRad(offset + i*45));
+    const y = 600+850*Math.sin(Phaser.Math.DegToRad(offset + i*45));;
+
+    const dx = player.x - x;
+    const dy = player.y - y;
+    const angle = Math.atan2(dy, dx);
+    const speed = 320;
+    createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
+    
+}
+}
+
+function spawnLineBurst(n) {
+  const side = Phaser.Math.Between(0, 3);
+  const speed = 320;
+  let x, y;
+
+  switch (side) {
+    case 0: x = 0; y = 600; break;         // 왼쪽
+    case 1: x = 1200; y = 600; break;       // 오른쪽
+    case 2: x = 600; y = 0; break;         // 위쪽
+    case 3: x = 600; y = 1200; break;       // 아래쪽
+  }
+  if (x==0 || x==1200) {
+  let x_dir = (600-x)/600
+  for (let i = 0; i < n; i++) {
+    y = 1200/(n+1)*(i+1);
+    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.08, flipX=!(x_dir+1));
+  }
+}
+  else if (y==0 || y==1200) {
+    let y_dir = (600-y)/600
+    for (let i = 0; i < n; i++) {
+      x = 1200/(n+1)*(i+1);
+      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.08);
+    }
+  }
+}
+
+
+
+
 function patternManager(patternList, scene)
 { 
   const patterns = {
@@ -815,6 +872,8 @@ function patternManager(patternList, scene)
       spawnLineBurst(n);
     }
   }
+
+  
 
   for (const pattern of patternList) {
     const [patternName, triggerTime, ...args] = pattern;
