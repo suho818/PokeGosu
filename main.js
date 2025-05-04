@@ -424,6 +424,7 @@ function create() {
           editIcon.setX(userNameField.x + userNameField.width + 10);
         }
       }
+      inputDOM.placeholder = `${username}`;
       windowManager = 'nothing';
       container.setVisible(false); // 닫기
     });
