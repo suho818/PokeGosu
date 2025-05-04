@@ -424,6 +424,7 @@ function create() {
           editIcon.setX(userNameField.x + userNameField.width + 10);
         }
       }
+      document.getElementById('nicknameInput').blur();
       inputDOM.placeholder = `${username}`;
       windowManager = 'nothing';
       container.setVisible(false); // 닫기
