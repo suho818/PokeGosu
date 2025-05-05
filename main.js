@@ -1,6 +1,7 @@
 let game;
 const screenWidth = Math.max(window.innerWidth, 800);
 const screenHeight = Math.max(window.innerHeight, 800);
+const ratio = 250/116
 const config = {
   type: Phaser.AUTO,
   width: 1200,//Math.min(screenHeight,screenWidth),
@@ -21,7 +22,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
+      debug: true
     }
   },
   scene: {
@@ -36,9 +37,14 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime, startUI, username, ssid, avoid_num = 0, distance = 0, pokedex = 172,
-isGameStarted, isGameOver, windowManager,
-gameOverUI, gameOverScoreText, gameOverHighScoreText, nicknameEditUI, inputDOM;
+let player, cursors, timerText, startTime, startUI, username, ssid, 
+avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
+avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
+distance = 0, pokedex = 172,
+isGameStarted, isGameOver, windowManager, 
+gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText, 
+monsterball_text, superball_text, hyperball_text, masterball_text,
+nicknameEditUI, inputDOM;
 let obstacles;
 let elapsedTime;
 
@@ -80,10 +86,11 @@ function preload() {
     frameWidth:57,
     frameHeight:75,
   });
-
-  this.load.image('obstacle-left', 'image/cuteghost9.png');
-  this.load.image('obstacle-right', 'image/cuteghost-right9.png');
-  this.load.image('monster-ball', 'image/monster-ball.png')
+  this.load.image('monster-ball', 'image/monster-ball.png');
+  this.load.image('monsterball', 'image/monsterball.png');
+  this.load.image('superball', 'image/superball.png');
+  this.load.image('hyperball', 'image/hyperball.png');
+  this.load.image('masterball', 'image/masterball.png');
 }
 let player_img = {
   left: 'pichu-left',
@@ -309,9 +316,12 @@ function create() {
     }
     sendData(data);
     distance = 0;
-    avoid_num = 0;
+    avoid_num_now = avoid_num;
+    console.log(avoid_num_now);
+    avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0};
+    
     animGameOver(this, obstacle);
-    this.time.delayedCall(2000, ()=>
+    this.time.delayedCall(2100, ()=>
     showGameOverUI(this));
 });
   function resetStartUIPosition() {
@@ -416,7 +426,7 @@ function create() {
       const newName = inputDOM.text;
       console.log(newName);
       if (newName) {
-        localStorage.setItem('nickname', newName);
+        localStorage.setItem('username', newName);
         if (userNameField) {
           userNameField.setText(newName);
           username = newName;
@@ -460,22 +470,59 @@ function create() {
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5)
       .setAlpha(0.8);
-  
-    gameOverScoreText = scene.add.text(0, -100, '현재 기록: 0.0s', {
+    const monsterball_img = scene.add.image(-140,30,'monsterball').setScale(0.12*ratio).setOrigin(0.5)
+    monsterball_text =  scene.add.text(-120,30, `X${avoid_num_now['monsterball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+
+    const superball_img = scene.add.image(-140,80,'superball').setScale(0.12*ratio).setOrigin(0.5)
+    superball_text =  scene.add.text(-120,80, `X${avoid_num_now['superball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+    
+    const hyperball_img = scene.add.image(75,30,'hyperball').setScale(0.12*ratio).setOrigin(0.5)
+    hyperball_text =  scene.add.text(95,30, `X${avoid_num_now['hyperball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+
+    const masterball_img = scene.add.image(75,80,'masterball').setScale(0.12*ratio).setOrigin(0.5)
+    masterball_text =  scene.add.text(95,80, `X${avoid_num_now['masterball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+
+
+    const gameOverTitleText = scene.add.text(0, -370, '게임 오버', {
+        fontFamily: 'GSC',
+        fontSize: '115px',
+        color: '#ffffff'
+    }).setOrigin(0.5);
+
+
+    gameOverScoreText = scene.add.text(0, -55, '현재 기록: 0.0s', {
       fontFamily: 'GSC',
       fontSize: '100px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    gameOverHighScoreText = scene.add.text(0, -220, '최고 기록: 0.0s', {
+    gameOverHighScoreText = scene.add.text(0, -175, '최고 기록: 0.0s', {
       fontFamily: 'GSC',
       fontSize: '100px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
+    
+
+   
   
-  
-    const retryBtn = scene.add.text(150, 60, '다시하기', {
+    const retryBtn = scene.add.text(150, 170, '다시하기', {
       fontFamily: 'GSC',
       fontSize: '60px',
       backgroundColor: '#473406',
@@ -505,8 +552,8 @@ function create() {
       patternManager(patternList, scene);
     })
     });
-  
-    const submitBtn = scene.add.text(150, 180, '등록하기', {
+
+    const shareBtn = scene.add.text(150, 290, '공유하기', {
       fontFamily: 'GSC',
       fontSize: '60px',
       backgroundColor: '#473406',
@@ -514,22 +561,20 @@ function create() {
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
   
-    submitBtn.on('pointerdown', () => {
-      const score = elapsedTime.toFixed(1);
-      console.log(`[등록] ${username} - ${score}s`);
-    });
+    shareBtn.on('pointerdown', showTop5Ranking);
+   
 
-    const rankingBtn = scene.add.text(-150, 180, '랭킹보기', {
+    const rankingBtn = scene.add.text(-150, 290, '랭킹보기', {
       fontFamily: 'GSC',
       fontSize: '60px',
       backgroundColor: '#473406',
       color: '#fff',
       padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive({useHandCursor: true});
+    }).setOrigin(0.5).setInteractive();
   
     rankingBtn.on('pointerdown', showTop5Ranking);
 
-    const homeBtn = scene.add.text(-150, 60, '시작화면', {
+    const homeBtn = scene.add.text(-150, 170, '시작화면', {
       fontFamily: 'GSC',
       fontSize: '60px',
       backgroundColor: '#473406',
@@ -547,12 +592,18 @@ function create() {
       scene.physics.world.resume(); 
     });
   
-    gameOverUI.add([bg, gameOverScoreText, gameOverHighScoreText,
-       retryBtn, submitBtn, rankingBtn, homeBtn]);
+    gameOverUI.add([bg, gameOverTitleText, gameOverScoreText, gameOverHighScoreText, 
+       retryBtn, rankingBtn, homeBtn, shareBtn, 
+       monsterball_img, monsterball_text, superball_img, superball_text,
+       hyperball_img, hyperball_text, masterball_img, masterball_text]);
   }
   
   function showGameOverUI(scene) {
     gameOverScoreText.setText(`현재 기록: ${elapsedTime.toFixed(1)}s`);
+    monsterball_text.setText(`X${avoid_num_now['monsterball']}`);
+    superball_text.setText(`X${avoid_num_now['superball']}`);
+    hyperball_text.setText(`X${avoid_num_now['hyperball']}`);
+    masterball_text.setText(`X${avoid_num_now['masterball']}`);
 
     const best = getBestRecord();
     if (elapsedTime > best) {
@@ -572,15 +623,10 @@ function create() {
   }
 
   function animGameOver(scene, hit_obstacle) {
-    scene.tweens.add({
-      targets: player,
-      angle: -720,
-      x: hit_obstacle.x,
-      y: hit_obstacle.y,
-      scale: 0,
-      duration: 1500
-
-      })
+    let dir = 1;
+    if (hit_obstacle.xd > 0) {
+      dir = -1
+    }
     obstacles.getChildren().forEach( obstacle => {
       if (obstacle !== hit_obstacle) {
         scene.tweens.add({
@@ -591,6 +637,22 @@ function create() {
           ease: 'Back.easeIn'
         })
       }
+    })
+    
+    scene.tweens.chain({
+      tweens: [
+        {targets: hit_obstacle,
+          x: player.x + dir * 40,
+          y: player.y - 50,
+          angle: -360,
+          duration: 400},
+        {targets: player,
+            angle: -1080,
+            x: player.x + dir * 40,
+            y: player.y - 50,
+            scale: 0,
+            duration: 1500}
+      ]
     })
   }
   
@@ -648,7 +710,26 @@ function update(time, delta) {
   }
   movePlayer(this); // this는 Phaser.Scene
   
-  
+  obstacles.getChildren().forEach(obstacle =>
+  {
+    if (
+      (obstacle.x < -5 && obstacle.xd < 0)
+      || (obstacle.x > 1205 && obstacle.xd > 0)
+      || (obstacle.y < -5 && obstacle.yd < 0)
+      || (obstacle.y > 1205 && obstacle.yd > 0)
+    )
+    {
+      obstacle.destroy();
+      if (!isGameOver){ 
+      
+      avoid_num[obstacle.balltype] += 1;
+      console.log(avoid_num);
+      }
+    }
+  }
+  )
+
+
 }
 
 
@@ -722,13 +803,30 @@ document.addEventListener('dragstart', (e) => {
   e.preventDefault();
 });
 
-function createBall (img, x, y, vx, vy, scale = 0.08, flipX = false, flipY = false) {
+function createBall (img, x, y, vx, vy, scale = 0.08*ratio) {
   const obstacle = obstacles.create(x, y, img);
+  let flip = 1;
       obstacle.setScale(scale);
       obstacle.setVelocity(vx,vy);
-      obstacle.setCircle(125);
-      obstacle.setFlipX(flipX);
-      obstacle.setFlipY(flipY);
+      obstacle.setCircle(58);
+      if (vx > 0) {
+        obstacle.setFlipX(true);
+        flip = 0;
+      };
+      obstacle.setRotation(Math.atan2(vy,vx)-Math.PI*flip);
+      if (vx*vy!= 0) {
+      obstacle.yd = vy/Math.abs(vy);
+      obstacle.xd = vx/Math.abs(vx);
+      }
+      else if (vx == 0) {
+        obstacle.xd = 0;
+        obstacle.yd = vy/Math.abs(vy);
+      }
+      else {
+        obstacle.xd = vx/Math.abs(vx);
+        obstacle.yd = 0;
+      }
+  obstacle.balltype = img;
 }
 let patternEvents = [];
 
@@ -788,7 +886,7 @@ function movePlayer(scene) {
 }
 
 
-function spawnBasicShooter() {
+function spawnBasicShooter(balltype='monsterball') {
   // 원의 반지름 설정
   const radius = 850;
   
@@ -804,17 +902,28 @@ function spawnBasicShooter() {
   const dy = player.y - y;
   const angleToPlayer = Math.atan2(dy, dx);
 
-  // 텍스처 선택 (왼쪽 또는 오른쪽)
-  const texture = dx < 0 ? 'monster-ball' : 'monster-ball'; // 나중에 텍스처 다르게 설정 가능
-
   // 발사 속도 설정
-  const speed = 320;
-
+  let co_speed = 1;
+  switch (balltype) {
+    case 'monsterball': co_speed = 1;break;
+    case 'superball': co_speed = 1.2;break;
+    case 'hyperball': co_speed = 1.5;break;
+    case 'masterball': co_speed = 1;break;
+  }
+  const speed = 320 * co_speed;
   // 몬스터 생성 (기존 로직 그대로)
-  createBall('monster-ball', x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
+  createBall(balltype, x, y, Math.cos(angleToPlayer) * speed, Math.sin(angleToPlayer) * speed);
 }
 
-function spawnOctoBurst() {
+function spawnOctoBurst(balltype='monsterball') {
+  let co_speed = 1;
+  switch (balltype) {
+    case 'monsterball': co_speed = 1;break;
+    case 'superball': co_speed = 1.2;break;
+    case 'hyperball': co_speed = 1.5;break;
+    case 'masterball': co_speed = 1;break;
+  }
+  const speed = 400 * co_speed;
   const center = { x: player.x, y: player.y };
   let offset = Phaser.Math.Between(0,44);
 
@@ -825,15 +934,22 @@ function spawnOctoBurst() {
     const dx = player.x - x;
     const dy = player.y - y;
     const angle = Math.atan2(dy, dx);
-    const speed = 320;
-    createBall('monster-ball', x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
+    
+    createBall(balltype, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed);
     
 }
 }
 
-function spawnLineBurst(n) {
+function spawnLineBurst(n, balltype='monsterball') {
   const side = Phaser.Math.Between(0, 3);
-  const speed = 320;
+  let co_speed = 1;
+  switch (balltype) {
+    case 'monsterball': co_speed = 1;break;
+    case 'superball': co_speed = 1.2;break;
+    case 'hyperball': co_speed = 1.5;break;
+    case 'masterball': co_speed = 1;break;
+  }
+  const speed = 400 * co_speed;
   let x, y;
 
   switch (side) {
@@ -846,14 +962,14 @@ function spawnLineBurst(n) {
   let x_dir = (600-x)/600
   for (let i = 0; i < n; i++) {
     y = 1200/(n+1)*(i+1);
-    createBall('monster-ball', x, y, x_dir*speed, 0, scale = 0.08, flipX=!(x_dir+1));
+    createBall(balltype, x, y, x_dir*speed, 0, scale = 0.08*ratio);
   }
 }
   else if (y==0 || y==1200) {
     let y_dir = (600-y)/600
     for (let i = 0; i < n; i++) {
       x = 1200/(n+1)*(i+1);
-      createBall('monster-ball', x, y, 0, y_dir*speed, scale = 0.08);
+      createBall(balltype, x, y, 0, y_dir*speed, scale = 0.08*ratio);
     }
   }
 }
@@ -864,14 +980,14 @@ function spawnLineBurst(n) {
 function patternManager(patternList, scene)
 { 
   const patterns = {
-    basicShoot: function (scene) {
-      spawnBasicShooter(scene);
+    basicShoot: function (balltype) {
+      spawnBasicShooter(balltype);
     },
-    octoBurst: function (scene) {
-      spawnOctoBurst(scene);
+    octoBurst: function (balltype) {
+      spawnOctoBurst(balltype);
     },
-    lineBurst: function (n) {
-      spawnLineBurst(n);
+    lineBurst: function (n, balltype) {
+      spawnLineBurst(n, balltype);
     }
   }
 
@@ -894,28 +1010,21 @@ function patternManager(patternList, scene)
 }
 
 const patternList = [
-    ['lineBurst', 15, 5],
-    ['octoBurst', 30],
-    ['lineBurst', 45, 6],
-    ['octoBurst', 52.5],    
-    ['octoBurst', 60],
-    ['octoBurst', 67.5],
-    ['lineBurst', 75, 7],
-    ['octoBurst', 90],
-    ['lineBurst', 105, 8],
-    ['octoBurst', 110],
-    ['octoBurst', 115],
-    ['octoBurst', 120],
-    ['lineBurst', 120, 10],
-    ['lineBurst', 122.5, 10],
-    ['lineBurst', 125, 10],
-    ['lineBurst', 127.5, 10],
-    ['lineBurst', 130, 10],
-    ['octoBurst', 132],
-    ['octoBurst', 134],
-    ['octoBurst', 136],
-    ['octoBurst', 138],
-    ['octoBurst', 140]
+    ['lineBurst', 12, 5],['lineBurst', 24, 6], ['lineBurst', 36, 7],
+    ['lineBurst', 48, 8],['lineBurst', 60, 9], ['lineBurst', 72, 10],
+    ['lineBurst', 84, 10],['lineBurst', 90, 10], ['lineBurst', 96, 10],
+    ['lineBurst', 102, 10],['lineBurst', 108, 10], ['lineBurst', 114, 10],
+    ['lineBurst', 120, 10],['lineBurst', 126, 10], ['lineBurst', 132, 10],
+    ['octoBurst', 7], ['octoBurst', 14], ['octoBurst', 21],
+    ['octoBurst', 28], ['octoBurst', 35], ['octoBurst', 42, 'superball'],
+    ['octoBurst', 45, 'superball'], ['octoBurst', 50, 'superball'],
+    ['octoBurst', 55, 'superball'], ['octoBurst', 60, 'superball'],
+    ['octoBurst', 65, 'superball'], ['octoBurst', 70, 'superball'],
+    ['octoBurst', 75, 'superball'], ['octoBurst', 80, 'superball'],
+    ['octoBurst', 85, 'superball'], ['octoBurst', 90, 'superball'],
+    ['octoBurst', 95, 'superball'], ['octoBurst', 100, 'superball'],
+    ['octoBurst', 105, 'superball'], ['octoBurst', 110, 'superball'],
+    ['octoBurst', 115, 'superball'], ['octoBurst', 120, 'superball'],
 ]
 
 
