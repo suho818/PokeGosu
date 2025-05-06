@@ -40,20 +40,26 @@ const config = {
 let player, cursors, timerText, startTime, startUI, username, ssid, 
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
-distance = 0, pokedex = 172,
-isGameStarted, isGameOver, windowManager, 
-gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText, 
+distance = 0, pokedex = 172, myranking,
+isGameStarted, isGameOver, windowManager, rankingState = 0, 
+gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText,
+rankingUI, 
 monsterball_text, superball_text, hyperball_text, masterball_text,
 nicknameEditUI, inputDOM;
 let obstacles;
 let elapsedTime;
+const colorbox = {
+  gold: '#FFD700',
+  silver: '#C0C0C0',
+  bronze: '#CD7F32'
+}
 
 function isMobileDevice() {
   return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 function preload() {
-  	
+  
   this.load.plugin('rexinputtextplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexinputtextplugin.min.js', true);
 
 
@@ -197,7 +203,7 @@ function create() {
   
       this.tweens.add({
         targets: rankingBtn,
-        x: rankingBtn.x - 500,
+        x: rankingBtn.x + 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -205,7 +211,7 @@ function create() {
   
       this.tweens.add({
         targets: statisticBtn,
-        x: statisticBtn.x + 500,
+        x: statisticBtn.x - 500,
         alpha: 0,
         duration: 500,
         ease: 'Back.easeIn'
@@ -239,7 +245,7 @@ function create() {
     alert('아직 포켓몬 교체를 할 수 없습니다.');
   });
 
-  const rankingBtn = this.add.text(600 - 180, 670, '랭킹', {
+  const rankingBtn = this.add.text(600 + 180, 670, '랭킹', {
     fontFamily: 'GSC',
     fontSize: '60px',
     color: '#fff',
@@ -250,9 +256,10 @@ function create() {
   rankingBtn.on('pointerdown',  () => {
     if (isGameStarted) return;
     if (windowManager != 'nothing') return;
-    showTop5Ranking()});
+    windowManager = 'ranking';
+    showRankingUI(this)});
 
-  const statisticBtn = this.add.text(600 + 180, 670, '통계', {
+  const statisticBtn = this.add.text(600 - 180, 670, '통계', {
     fontFamily: 'GSC',
     fontSize: '60px',
     color: '#fff',
@@ -291,6 +298,7 @@ function create() {
   createNicknameEditUI(this);
   nicknameEditUI.setVisible(false);
   createGameOverUI(this);
+  createRankingUI(this);
   
  
 
@@ -321,8 +329,9 @@ function create() {
     avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0};
     
     animGameOver(this, obstacle);
-    this.time.delayedCall(2100, ()=>
-    showGameOverUI(this));
+    this.time.delayedCall(2100, ()=>{
+      windowManager = 'gameover';
+    showGameOverUI(this)});
 });
   function resetStartUIPosition() {
     title.setPosition(600, 600 - 450);
@@ -499,20 +508,20 @@ function create() {
     }).setOrigin(0,0.5)
 
 
-    const gameOverTitleText = scene.add.text(0, -370, '게임 오버', {
+    const gameOverTitleText = scene.add.text(0, -410, '게임 오버', {
         fontFamily: 'GSC',
         fontSize: '115px',
         color: '#ffffff'
     }).setOrigin(0.5);
 
 
-    gameOverScoreText = scene.add.text(0, -55, '현재 기록: 0.0s', {
+    gameOverScoreText = scene.add.text(0, -95, '현재 기록: 0.0s', {
       fontFamily: 'GSC',
       fontSize: '100px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    gameOverHighScoreText = scene.add.text(0, -175, '최고 기록: 0.0s', {
+    gameOverHighScoreText = scene.add.text(0, -215, '최고 기록: 0.0s', {
       fontFamily: 'GSC',
       fontSize: '100px',
       color: '#ffffff'
@@ -531,9 +540,11 @@ function create() {
     }).setOrigin(0.5).setInteractive();
   
     retryBtn.on('pointerdown', () => {
+      if (windowManager!='gameover') return;
       obstacles.clear(true, true);
       scene.physics.world.resume();
       gameOverUI.setVisible(false);
+      windowManager = 'nothing';
       gameOverUI.scale = 0;
       player.scale = 1;
       player.angle = 0;
@@ -561,7 +572,10 @@ function create() {
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
   
-    shareBtn.on('pointerdown', showTop5Ranking);
+    shareBtn.on('pointerdown', () => {
+      if (windowManager!='gameover') return;
+      alert('아직 공유하기 기능이 없습니다.');
+    });
    
 
     const rankingBtn = scene.add.text(-150, 290, '랭킹보기', {
@@ -572,7 +586,11 @@ function create() {
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive();
   
-    rankingBtn.on('pointerdown', showTop5Ranking);
+    rankingBtn.on('pointerdown', ()=>{
+      if (windowManager!='gameover') return;
+      windowManager = 'ranking';
+      showRankingUI(scene);
+    });
 
     const homeBtn = scene.add.text(-150, 170, '시작화면', {
       fontFamily: 'GSC',
@@ -583,6 +601,8 @@ function create() {
     }).setOrigin(0.5).setInteractive();
   
     homeBtn.on('pointerdown', () => {
+      if (windowManager!='gameover') return;
+      windowManager = 'nothing';
       gameOverUI.setVisible(false);
       gameOverUI.scale = 0;
       player.scale = 1;
@@ -633,7 +653,7 @@ function create() {
           targets: obstacle,
           x: obstacle.x + Phaser.Math.Between(-500, 500), 
           y: obstacle.y + Phaser.Math.Between(1200, 3000),
-          duration: 1200,
+          duration: Phaser.Math.Between(1000, 1500) ,
           ease: 'Back.easeIn'
         })
       }
@@ -752,6 +772,7 @@ function setupDynamicJoystick() {
   }
 
   document.body.addEventListener('touchstart', (e) => {
+    if (windowManager != 'nothing') return;
     const touch = e.touches[0];
     origin = { x: touch.clientX, y: touch.clientY };
 
@@ -1064,22 +1085,274 @@ async function sendData(data) {
   console.log(result);
 }
 
-async function showTop5Ranking() {
+async function fetchTotalRanking() {
   try {
-    const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking');
-    const rankings = await response.json();
-
-    let message = '🏆 TOP 10 랭킹 🏆\n\n';
-    rankings.forEach((player, idx) => {
-      message += `${idx + 1}등: ${player.nickname} (${player.time.toFixed(1)}s)\n`;
-    });
-
-    alert(message);
+    const res = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=all');
+    //const res = await fetch('./test.json'); //test용
+    const data = await res.json();
+    return data;
   } catch (err) {
-    console.error('랭킹 불러오기 실패:', err);
-    alert('랭킹을 불러오지 못했습니다.');
+    console.error('전체 랭킹 오류:', err);
+    return [];
   }
 }
+
+
+async function fetchDailyRanking() {
+  try {
+    const res = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=daily');
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error('일간 랭킹 오류:', err);
+    return [];
+  }
+}
+
+async function fetchMyRanking(ssid) {
+  try {
+    const res = await fetch(`https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=my&ssid=${ssid}`);
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error('내 랭킹 오류:', err);
+    return [];
+  }
+}
+
+function updateRankingUI(scene) {
+
+  switch (rankingState) {
+  case 0: fetchTotalRanking().then(data => {
+    setRankingText(data);
+  });
+  case 1: fetchTotalRanking().then(data => {
+    setRankingText(data);
+  });
+  case 2: fetchTotalRanking().then(data => {
+    setRankingText(data);
+  });
+
+  }
+  
+  function setRankingText(rankingData) {
+  const entries = scene.rankingEntries.listEntries;
+
+  for (let i = 0; i < entries.length; i++) {
+    const data = rankingData[i];
+    const entry = entries[i];
+
+    if (data) {
+      if (data.ssid === ssid){
+        myranking = i + 1;
+      }
+      else {
+        myranking = 0;
+      }
+      entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
+      entry.nameText.setText(data.nickname.padEnd(10, '　')); // 닉네임 정렬
+      entry.timeText.setText(`${data.time.toFixed(1)}s`);
+    } else {
+      entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
+      entry.nameText.setText(`-`);
+      entry.timeText.setText(`-`);
+    }
+  }
+}
+}
+
+
+function createRankingUI(scene) {
+  const centerX = 600;
+  const centerY = 600;
+
+  rankingUI = scene.add.container(centerX, centerY).setVisible(false).setAlpha(1);
+  rankingUI.scaleX = 0;
+
+  // 배경
+  const bg = scene.add.rectangle(0, 0, 1000, 1000, 0xfbb917) //이쁜 하늘색 0xa2cffe
+    .setStrokeStyle(4, 0xffffff)
+    .setOrigin(0.5)
+    .setAlpha(0.98);
+
+    const bg2 = scene.add.rectangle(0, 90, 880, 700, 0xfffdd0)
+    .setOrigin(0.5)
+    .setAlpha(0.98);
+  
+    
+  // 타이틀
+  const title = scene.add.text(0, -410, '랭킹', {
+    fontFamily: 'GSC',
+    fontSize: '100px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const BackBtn = scene.add.text(-420, -450, '◀뒤로', {
+    fontFamily: 'GSC',
+    fontSize: '54px',
+    color: '#fff',
+  }).setOrigin(0.5).setInteractive();
+  BackBtn.on('pointerdown', () =>
+  {
+    if (isGameOver==true){
+      windowManager = 'gameover'
+    }
+    else{
+      windowManager='nothing'
+    }
+    rankingUI.setVisible(false);
+    rankingUI.setScale(0,1);
+  })
+
+
+  // 순위 리스트 (1등~10등)
+  const listEntries = [];
+
+  const my_rect = scene.add.rectangle(0, 0, 860, 53, 0xEE8D98)
+  .setOrigin(0.5)
+  .setAlpha(0.33).setVisible(false);
+  const my_check = scene.add.text(0, 0, 'New!!', {
+    fontFamily: 'GSC',
+    fontSize: '20px',
+    color: "#000000",
+  }).setOrigin(0.5).setVisible(false);
+ 
+  
+  for (let i = 0; i < 10; i++) {
+    const y = -210 + i * 66;
+
+    // 순위 텍스트 박스
+    const rankText = scene.add.text(-430, y, `No.${String(i + 1).padStart(3, '0')}`, {
+      fontFamily: 'GSC',
+      fontSize: '48px',
+      color: i === 0 ? '#FFD700' : (i === 1 ? '#C0C0C0' : (i === 2 ? '#CD7F32' : '#000000')),
+      align: 'left'
+    }).setOrigin(0,0.5);
+
+    // 닉네임 텍스트 박스
+    const nameText = scene.add.text(-170, y, '닉네임', {
+      fontFamily: 'GSC',
+      fontSize: '48px',
+      color: i === 0 ? '#FFD700' : (i === 1 ? '#C0C0C0' : (i === 2 ? '#CD7F32' : '#000000')),
+      align: 'left'
+    }).setOrigin(0, 0.5);
+
+    // 기록 텍스트 박스
+    const timeText = scene.add.text(430, y, '30.0초', {
+      fontFamily: 'GSC',
+      fontSize: '48px',
+      color: i === 0 ? '#FFD700' : (i === 1 ? '#C0C0C0' : (i === 2 ? '#CD7F32' : '#000000')),
+      align: 'left'
+    }).setOrigin(1, 0.5);
+
+
+  
+
+
+    // 순위, 닉네임, 기록을 각각의 텍스트 박스에 추가
+    listEntries.push({ rankText, nameText, timeText});
+  }
+
+  const rankingStateTextList = [
+    '전체', '일간', '나'
+  ]
+
+  const leftBut = scene.add.text(-70, -315,'◁', {
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setInteractive().on('pointerdown', () =>
+    {
+      if( rankingState > 0) {
+  rankingState -= 1;
+  rightBut.setText('▶');
+  rankingStateText.setText(rankingStateTextList[rankingState]);
+  updateRankingUI(scene);
+  if (myranking<=10&&myranking>0) {
+    let y = -210 + (myranking-1) * 66
+     // 내 랭킹에다가 박스
+      my_rect.setPosition(0,y).setVisible(true);
+      my_check.setPosition(-420, y-20);
+      my_check.setAngle(-30);
+    }
+    else {
+      my_rect.setVisible(false);
+    }
+      }
+      if (rankingState == 0) {
+        leftBut.setText('◁');
+      }
+    })
+
+  const rightBut = scene.add.text(70, -315,'▶', {
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setInteractive().on('pointerdown', () =>
+  {
+    if( rankingState < rankingStateTextList.length-1) {
+      rankingState += 1;
+      leftBut.setText('◀');
+      rankingStateText.setText(rankingStateTextList[rankingState]);
+      updateRankingUI(scene);
+      if (myranking<=10&&myranking>0) {
+        let y = -210 + (myranking-1) * 66
+         // 내 랭킹에다가 박스
+          my_rect.setPosition(0,y).setVisible(true);
+          my_check.setPosition(-420, y-20);
+          my_check.setAngle(-30);
+        }
+        else {
+          my_rect.setVisible(false);
+        }
+          }
+          if (rankingState == rankingStateTextList.length-1) {
+            rightBut.setText('▷')
+          }
+  })
+
+  const rankingStateText = scene.add.text(0, -317, '전체', {
+    fontFamily: 'GSC',
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5)
+
+
+  rankingUI.add([bg, bg2, title, 
+    ...listEntries.map(entry => entry.rankText),
+    ...listEntries.map(entry => entry.nameText), 
+    ...listEntries.map(entry => entry.timeText),
+  my_rect, my_check,
+leftBut, rightBut, BackBtn, rankingStateText]);
+
+  // 외부에서 접근 가능하게 참조
+  scene.rankingEntries = {
+    listEntries
+  };
+  scene.my_rect = my_rect;
+  scene.my_check = my_check;
+}
+
+function showRankingUI(scene) {
+  updateRankingUI(scene);
+  if (myranking<=10&&myranking>0) {
+    let y = -210 + (myranking-1) * 66
+     // 내 랭킹에다가 박스
+      scene.my_rect.setPosition(0,y).setVisible(true);
+      scene.my_check.setPosition(-420, y-20);
+      scene.my_check.setAngle(-30);
+    }
+    else {
+      scene.my_rect.setVisible(false);
+    }
+  scene.children.bringToTop(rankingUI);
+  rankingUI.setVisible(true);
+  scene.tweens.add({
+    targets: rankingUI,
+    scale: 1,
+    duration: 300,
+    ease: 'Sine.easeOut'
+  });
+}
+
 
 
 
@@ -1089,4 +1362,5 @@ document.fonts.ready.then(() => {
   game = new Phaser.Game(config);
   //setupDpad();
   setupDynamicJoystick();
+  
 });
