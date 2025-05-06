@@ -1129,7 +1129,7 @@ function updateRankingUI(scene) {
   case 1: fetchDailyRanking().then(data => {
     setRankingText(data);
   }); break;
-  case 2: fetchMyRanking().then(data => {
+  case 2: fetchMyRanking(ssid).then(data => {
     setRankingText(data);
   }); break;
 
