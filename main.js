@@ -1069,7 +1069,7 @@ async function showTop5Ranking() {
     const response = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking');
     const rankings = await response.json();
 
-    let message = '🏆 TOP 5 랭킹 🏆\n\n';
+    let message = '🏆 TOP 10 랭킹 🏆\n\n';
     rankings.forEach((player, idx) => {
       message += `${idx + 1}등: ${player.nickname} (${player.time.toFixed(1)}s)\n`;
     });
