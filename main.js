@@ -1126,10 +1126,10 @@ function updateRankingUI(scene) {
   case 0: fetchTotalRanking().then(data => {
     setRankingText(data);
   });
-  case 1: fetchTotalRanking().then(data => {
+  case 1: fetchDailyRanking().then(data => {
     setRankingText(data);
   });
-  case 2: fetchTotalRanking().then(data => {
+  case 2: fetchMyRanking().then(data => {
     setRankingText(data);
   });
 
@@ -1143,7 +1143,7 @@ function updateRankingUI(scene) {
     const entry = entries[i];
 
     if (data) {
-      if (data.ssid === ssid){
+      if (data.ssid === ssid && rankingState != 2){
         myranking = i + 1;
       }
       else {
