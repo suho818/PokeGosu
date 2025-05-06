@@ -1125,13 +1125,13 @@ function updateRankingUI(scene) {
   switch (rankingState) {
   case 0: fetchTotalRanking().then(data => {
     setRankingText(data);
-  });
+  }); break;
   case 1: fetchDailyRanking().then(data => {
     setRankingText(data);
-  });
+  }); break;
   case 2: fetchMyRanking().then(data => {
     setRankingText(data);
-  });
+  }); break;
 
   }
   
