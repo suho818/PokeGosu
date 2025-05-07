@@ -40,7 +40,7 @@ const config = {
 let player, cursors, timerText, startTime, startUI, username, ssid, 
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
-distance = 0, pokedex = 172, myranking,
+distance = 0, pokedex = 172,
 isGameStarted, isGameOver, windowManager, rankingState = 0, 
 gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText,
 rankingUI, 
@@ -1103,25 +1103,25 @@ async function sendData(data) {
 
 async function fetchTotalRanking() {
   try {
-    const res = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=all');
+    const res = await fetch(`https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=all&ssid=${ssid}`);
     //const res = await fetch('./test.json'); //test용
     const data = await res.json();
     return data;
   } catch (err) {
     console.error('전체 랭킹 오류:', err);
-    return [];
+    return { rankings: [], myRank: null };
   }
 }
 
 
 async function fetchDailyRanking() {
   try {
-    const res = await fetch('https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=daily');
+    const res = await fetch(`https://port-0-game-server-m9xqyfrx52a421f7.sel4.cloudtype.app/ranking?mode=daily&ssid=${ssid}`);
     const data = await res.json();
     return data;
   } catch (err) {
     console.error('일간 랭킹 오류:', err);
-    return [];
+    return { rankings: [], myRank: null };
   }
 }
 
@@ -1132,55 +1132,75 @@ async function fetchMyRanking(ssid) {
     return data;
   } catch (err) {
     console.error('내 랭킹 오류:', err);
-    return [];
+    return { rankings: [], myRank: null };
   }
 }
 
 function updateRankingUI(scene) {
   const loadingText = scene.rankingEntries.loadingText;
-  loadingText.setVisible(true);
+  const my_rect = scene.my_rect;
+  const my_check = scene.my_check;
 
-  // 기존 항목 숨김 (선택사항)
+  if (loadingText) loadingText.setVisible(true);
+  if (my_rect) my_rect.setVisible(false);
+  if (my_check) my_check.setVisible(false);
+  if (scene.my_extra_rank) scene.my_extra_rank.destroy();
+
   for (let entry of scene.rankingEntries.listEntries) {
     entry.rankText.setVisible(false);
     entry.nameText.setVisible(false);
     entry.timeText.setVisible(false);
   }
 
-  // 데이터 가져오기
   const fetchers = [fetchTotalRanking, fetchDailyRanking, () => fetchMyRanking(ssid)];
-  fetchers[rankingState]().then(data => {
-    setRankingText(data);
-    loadingText.setVisible(false); // 📌 로딩 끝
-  });
 
-  function setRankingText(rankingData) {
+  fetchers[rankingState]().then(data => {
+    const rankings = data.rankings || data;
+    const myRank = data.myRank;
+
     const entries = scene.rankingEntries.listEntries;
-  
+
     for (let i = 0; i < entries.length; i++) {
-      const data = rankingData[i];
       const entry = entries[i];
+      const user = rankings[i];
+
       entry.rankText.setVisible(true);
       entry.nameText.setVisible(true);
       entry.timeText.setVisible(true);
-  
-      if (data) {
-        if (data.ssid === ssid && rankingState != 2){
-          myranking = i + 1;
-        }
-        else {
-          myranking = 0;
-        }
+
+      if (user) {
         entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
-        entry.nameText.setText(data.nickname.padEnd(10, '　')); // 닉네임 정렬
-        entry.timeText.setText(`${data.time.toFixed(1)}s`);
+        entry.nameText.setText(user.nickname.padEnd(10, '　'));
+        entry.timeText.setText(`${user.time.toFixed(1)}s`);
+
+        // 내 랭킹이면 강조
+        if ((user._id === ssid || user.ssid === ssid) && rankingState !== 2) {
+          my_rect.setPosition(0, entry.rankText.y).setVisible(true);
+          my_check.setPosition(-420, entry.rankText.y - 20).setAngle(-30).setVisible(true);
+        }
+
       } else {
         entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
         entry.nameText.setText(`-`);
         entry.timeText.setText(`-`);
       }
     }
-  }
+
+    // 10등 밖에 있는 경우 내 순위 표시
+    if (myRank > 10 && myRank !== null && rankingState !== 2) {
+      scene.my_extra_rank = scene.add.text(0, 410, `내 순위: ${myRank}위`, {
+        fontFamily: 'GSC',
+        fontSize: '48px',
+        color: '#ffffff'
+      }).setOrigin(0.5);
+      rankingUI.add(scene.my_extra_rank);
+    }
+
+    if (loadingText) loadingText.setVisible(false);
+  }).catch(err => {
+    console.error('랭킹 불러오기 실패:', err);
+    if (loadingText) loadingText.setVisible(false);
+  });
 
 }
   
@@ -1298,16 +1318,7 @@ function createRankingUI(scene) {
   rightBut.setText('▶');
   rankingStateText.setText(rankingStateTextList[rankingState]);
   updateRankingUI(scene);
-  if (myranking<=10&&myranking>0) {
-    let y = -210 + (myranking-1) * 66
-     // 내 랭킹에다가 박스
-      my_rect.setPosition(0,y).setVisible(true);
-      my_check.setPosition(-420, y-20);
-      my_check.setAngle(-30);
-    }
-    else {
-      my_rect.setVisible(false);
-    }
+  
       }
       if (rankingState == 0) {
         leftBut.setText('◁');
@@ -1324,16 +1335,7 @@ function createRankingUI(scene) {
       leftBut.setText('◀');
       rankingStateText.setText(rankingStateTextList[rankingState]);
       updateRankingUI(scene);
-      if (myranking<=10&&myranking>0) {
-        let y = -210 + (myranking-1) * 66
-         // 내 랭킹에다가 박스
-          my_rect.setPosition(0,y).setVisible(true);
-          my_check.setPosition(-420, y-20);
-          my_check.setAngle(-30);
-        }
-        else {
-          my_rect.setVisible(false);
-        }
+      
           }
           if (rankingState == rankingStateTextList.length-1) {
             rightBut.setText('▷')
@@ -1365,17 +1367,7 @@ leftBut, rightBut, BackBtn, rankingStateText]);
 
 function showRankingUI(scene) {
   updateRankingUI(scene);
-  console.log(`myranking:${myranking}`);
-  if (myranking<=10&&myranking>0) {
-    let y = -210 + (myranking-1) * 66
-     // 내 랭킹에다가 박스
-      scene.my_rect.setPosition(0,y).setVisible(true);
-      scene.my_check.setPosition(-420, y-20);
-      scene.my_check.setAngle(-30);
-    }
-    else {
-      scene.my_rect.setVisible(false);
-    }
+  
   scene.children.bringToTop(rankingUI);
   rankingUI.setVisible(true);
   scene.tweens.add({
