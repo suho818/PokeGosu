@@ -718,6 +718,22 @@ function setPichuAnimationSpeed(player, targetFrameRate) {
 }
 
 
+let hiddenAt = null;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // 탭을 벗어난 순간 기록
+    hiddenAt = Date.now();
+  } else {
+    // 다시 돌아온 경우
+    if (hiddenAt && isGameStarted && !isGameOver) {
+      const pauseDuration = Date.now() - hiddenAt;
+      startTime += pauseDuration; // 게임 시간 보정
+      hiddenAt = null;
+    }
+  }
+});
+
 let lastDir = 'left'; // 기본 방향
 
 function update(time, delta) {
@@ -1121,45 +1137,54 @@ async function fetchMyRanking(ssid) {
 }
 
 function updateRankingUI(scene) {
+  const loadingText = scene.rankingEntries.loadingText;
+  loadingText.setVisible(true);
 
-  switch (rankingState) {
-  case 0: fetchTotalRanking().then(data => {
-    setRankingText(data);
-  }); break;
-  case 1: fetchDailyRanking().then(data => {
-    setRankingText(data);
-  }); break;
-  case 2: fetchMyRanking(ssid).then(data => {
-    setRankingText(data);
-  }); break;
-
+  // 기존 항목 숨김 (선택사항)
+  for (let entry of scene.rankingEntries.listEntries) {
+    entry.rankText.setVisible(false);
+    entry.nameText.setVisible(false);
+    entry.timeText.setVisible(false);
   }
-  
+
+  // 데이터 가져오기
+  const fetchers = [fetchTotalRanking, fetchDailyRanking, () => fetchMyRanking(ssid)];
+  fetchers[rankingState]().then(data => {
+    setRankingText(data);
+    loadingText.setVisible(false); // 📌 로딩 끝
+  });
+
   function setRankingText(rankingData) {
-  const entries = scene.rankingEntries.listEntries;
-
-  for (let i = 0; i < entries.length; i++) {
-    const data = rankingData[i];
-    const entry = entries[i];
-
-    if (data) {
-      if (data.ssid === ssid && rankingState != 2){
-        myranking = i + 1;
+    const entries = scene.rankingEntries.listEntries;
+  
+    for (let i = 0; i < entries.length; i++) {
+      const data = rankingData[i];
+      const entry = entries[i];
+      entry.rankText.setVisible(true);
+      entry.nameText.setVisible(true);
+      entry.timeText.setVisible(true);
+  
+      if (data) {
+        if (data.ssid === ssid && rankingState != 2){
+          myranking = i + 1;
+        }
+        else {
+          myranking = 0;
+        }
+        entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
+        entry.nameText.setText(data.nickname.padEnd(10, '　')); // 닉네임 정렬
+        entry.timeText.setText(`${data.time.toFixed(1)}s`);
+      } else {
+        entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
+        entry.nameText.setText(`-`);
+        entry.timeText.setText(`-`);
       }
-      else {
-        myranking = 0;
-      }
-      entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
-      entry.nameText.setText(data.nickname.padEnd(10, '　')); // 닉네임 정렬
-      entry.timeText.setText(`${data.time.toFixed(1)}s`);
-    } else {
-      entry.rankText.setText(`No.${String(i + 1).padStart(3, '0')}`);
-      entry.nameText.setText(`-`);
-      entry.timeText.setText(`-`);
     }
   }
+
 }
-}
+  
+
 
 
 function createRankingUI(scene) {
@@ -1178,6 +1203,12 @@ function createRankingUI(scene) {
     const bg2 = scene.add.rectangle(0, 90, 880, 700, 0xfffdd0)
     .setOrigin(0.5)
     .setAlpha(0.98);
+  
+    const loadingText = scene.add.text(0, 0, '불러오는 중...', {
+      fontFamily: 'GSC',
+      fontSize: '50px',
+      color: '#000000'
+    }).setOrigin(0.5).setVisible(false);  // 기본은 숨김
   
     
   // 타이틀
@@ -1316,7 +1347,7 @@ function createRankingUI(scene) {
   }).setOrigin(0.5)
 
 
-  rankingUI.add([bg, bg2, title, 
+  rankingUI.add([bg, bg2, title, loadingText,
     ...listEntries.map(entry => entry.rankText),
     ...listEntries.map(entry => entry.nameText), 
     ...listEntries.map(entry => entry.timeText),
@@ -1325,7 +1356,8 @@ leftBut, rightBut, BackBtn, rankingStateText]);
 
   // 외부에서 접근 가능하게 참조
   scene.rankingEntries = {
-    listEntries
+    listEntries,
+    loadingText
   };
   scene.my_rect = my_rect;
   scene.my_check = my_check;
