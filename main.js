@@ -1365,6 +1365,7 @@ leftBut, rightBut, BackBtn, rankingStateText]);
 
 function showRankingUI(scene) {
   updateRankingUI(scene);
+  console.log(`myranking:${myranking}`);
   if (myranking<=10&&myranking>0) {
     let y = -210 + (myranking-1) * 66
      // 내 랭킹에다가 박스
