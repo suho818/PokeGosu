@@ -1144,7 +1144,13 @@ function updateRankingUI(scene) {
   if (loadingText) loadingText.setVisible(true);
   if (my_rect) my_rect.setVisible(false);
   if (my_check) my_check.setVisible(false);
-  if (scene.my_extra_rank) scene.my_extra_rank.destroy();
+  if (scene.my_extra_rank_line) scene.my_extra_rank_line.destroy();
+  if (scene.my_extra_rank) {
+    scene.my_extra_rank.rankText.destroy();
+    scene.my_extra_rank.nameText.destroy();
+    scene.my_extra_rank.timeText.destroy();
+    scene.my_extra_rank = null;
+  }
 
   for (let entry of scene.rankingEntries.listEntries) {
     entry.rankText.setVisible(false);
@@ -1176,7 +1182,7 @@ function updateRankingUI(scene) {
         // 내 랭킹이면 강조
         if ((user._id === ssid || user.ssid === ssid) && rankingState !== 2) {
           my_rect.setPosition(0, entry.rankText.y).setVisible(true);
-          my_check.setPosition(-420, entry.rankText.y - 20).setAngle(-30).setVisible(true);
+          //my_check.setPosition(-420, entry.rankText.y - 20).setAngle(-30).setVisible(true);
         }
 
       } else {
@@ -1186,15 +1192,39 @@ function updateRankingUI(scene) {
       }
     }
 
-    // 10등 밖에 있는 경우 내 순위 표시
-    if (myRank > 10 && myRank !== null && rankingState !== 2) {
-      scene.my_extra_rank = scene.add.text(0, 410, `내 순위: ${myRank}위`, {
-        fontFamily: 'GSC',
-        fontSize: '48px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
-      rankingUI.add(scene.my_extra_rank);
-    }
+      // ✅ 항상 내 순위 표시
+      if (myRank && myRank > 0) {
+        const y = -225 + entries.length * 63 + 63;
+  
+        // 검은 줄
+        scene.my_extra_rank_line = scene.add.rectangle(0, y - 20, 860, 2, 0x000000)
+          .setOrigin(0.5);
+        rankingUI.add(scene.my_extra_rank_line);
+  
+        const rankText = scene.add.text(-430, y, `No.${String(myRank).padStart(3, '0')}`, {
+          fontFamily: 'GSC',
+          fontSize: '48px',
+          color: '#000000'
+        }).setOrigin(0, 0.5);
+  
+        const nameText = scene.add.text(-170, y, myData?.nickname.padEnd(10, '　') || '-', {
+          fontFamily: 'GSC',
+          fontSize: '48px',
+          color: '#000000'
+        }).setOrigin(0, 0.5);
+  
+        const timeText = scene.add.text(430, y, myData?.time ? `${myData.time.toFixed(1)}s` : '-', {
+          fontFamily: 'GSC',
+          fontSize: '48px',
+          color: '#000000'
+        }).setOrigin(1, 0.5);
+  
+        rankingUI.add([rankText, nameText, timeText]);
+  
+        scene.my_extra_rank = {
+          rankText, nameText, timeText
+        };
+      }
 
     if (loadingText) loadingText.setVisible(false);
   }).catch(err => {
@@ -1259,7 +1289,7 @@ function createRankingUI(scene) {
   // 순위 리스트 (1등~10등)
   const listEntries = [];
 
-  const my_rect = scene.add.rectangle(0, 0, 860, 53, 0xEE8D98)
+  const my_rect = scene.add.rectangle(0, 0, 860, 51, 0xEE8D98)
   .setOrigin(0.5)
   .setAlpha(0.33).setVisible(false);
   const my_check = scene.add.text(0, 0, 'New!!', {
@@ -1270,7 +1300,7 @@ function createRankingUI(scene) {
  
   
   for (let i = 0; i < 10; i++) {
-    const y = -210 + i * 66;
+    const y = -225+ i * 63;
 
     // 순위 텍스트 박스
     const rankText = scene.add.text(-430, y, `No.${String(i + 1).padStart(3, '0')}`, {
