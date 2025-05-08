@@ -1194,7 +1194,7 @@ function updateRankingUI(scene) {
 
       // ✅ 항상 내 순위 표시
       if (myRank && myRank > 0) {
-        const y = -225 + entries.length * 63 + 63;
+        const y = -225 + entries.length * 63;
   
         // 검은 줄
         scene.my_extra_rank_line = scene.add.rectangle(0, y - 101, 860, 4, 0x000000)
