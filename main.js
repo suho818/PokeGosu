@@ -1197,7 +1197,7 @@ function updateRankingUI(scene) {
         const y = -225 + entries.length * 63;
   
         // 검은 줄
-        scene.my_extra_rank_line = scene.add.rectangle(0, y - 101, 860, 4, 0x000000)
+        scene.my_extra_rank_line = scene.add.rectangle(0, y - 30, 860, 4, 0x000000)
           .setOrigin(0.5);
         rankingUI.add(scene.my_extra_rank_line);
   
