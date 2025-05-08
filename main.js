@@ -286,7 +286,7 @@ function create() {
     showNicknameEditUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.3.0", {
+  const version = this.add.text(20, 1140, "v0.5.1", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
