@@ -554,7 +554,7 @@ function create() {
     
       timerText?.destroy();
       isGameOver = false;
-      timerText = scene.add.text(1050, 20, '0.0s', { 
+      timerText = scene.add.text(1180, 20, '0.0s', { 
         fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: "right" }).setOrigin(1,0);
     startTime = scene.time.now;
     scene.time.delayedCall(600, () => 
