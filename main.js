@@ -37,7 +37,7 @@ const config = {
   }
 };
 
-let player, cursors, timerText, startTime, startUI, username, ssid, 
+let scene, player, cursors, timerText, startTime, startUI, username, ssid, 
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 distance = 0, pokedex = 172,
@@ -104,6 +104,7 @@ let player_img = {
 }
 
 function create() {
+  scene = this
   this.scale.setGameSize(1200,1200);
   this.anims.create({
     key: 'pichu',
@@ -286,7 +287,7 @@ function create() {
     showNicknameEditUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.5.1", {
+  const version = this.add.text(20, 1140, "v0.6.0", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -325,7 +326,7 @@ function create() {
     sendData(data);
     distance = 0;
     avoid_num_now = avoid_num;
-    console.log(avoid_num_now);
+    
     avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0};
     
     animGameOver(this, obstacle);
@@ -554,7 +555,7 @@ function create() {
       timerText?.destroy();
       isGameOver = false;
       timerText = scene.add.text(1050, 20, '0.0s', { 
-        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: "right" });
+        fontSize: '40px', fill: '#000000', fontFamily: 'GSC', align: "right" }).setOrigin(1,0);
     startTime = scene.time.now;
     scene.time.delayedCall(600, () => 
     {
@@ -759,12 +760,17 @@ function update(time, delta) {
       if (!isGameOver){ 
       
       avoid_num[obstacle.balltype] += 1;
-      console.log(avoid_num);
+      
       }
     }
   }
   )
 
+  if (this.hyperBalls) {
+    for (let ball of this.hyperBalls) {
+      ball.update?.();
+    }
+  }
 
 }
 
@@ -864,6 +870,57 @@ function createBall (img, x, y, vx, vy, scale = 0.08*ratio) {
         obstacle.yd = 0;
       }
   obstacle.balltype = img;
+  
+  if(obstacle.balltype == 'hyperball') {
+
+    const hyperBall = obstacle;
+  hyperBall.setBounce(0, 0);
+  hyperBall.setCollideWorldBounds(false);
+  hyperBall.hasEntered = false;
+  hyperBall.bounceCount = 0;
+
+  hyperBall.update = function() {
+    const bounds = scene.physics.world.bounds;
+
+    if(!this.hasEntered && this.x >= 0 && this.x <= bounds.width &&
+      this.y >= 0 && this.y <= bounds.height) {
+        this.hasEntered = true;
+        this.setBounce(1,1);
+
+        this.setCollideWorldBounds(true);
+        this.body.onWorldBounds = true;
+      }
+
+      if (this.bounceCount >= 5) {
+          hyperBall.setBounce(0, 0);
+  hyperBall.setCollideWorldBounds(false);
+        const index = scene.hyperBalls.indexOf(this);
+        if(index !== -1) {
+          scene.hyperBalls.splice(index, 1);
+        }
+  
+}
+      
+  }
+  scene.physics.world.on('worldbounds', (body)=> {
+    if (body.gameObject === hyperBall && hyperBall.hasEntered) {
+      
+      hyperBall.bounceCount++;
+      
+      if (body.blocked.up || body.blocked.down) {
+            //hyperBall.setRotation(-hyperBall.Rotation);
+      } else if (body.blocked.left || body.blocked.right)
+      { 
+             hyperBall.setFlipX(!hyperBall.flipX);
+      }
+      
+    }
+  });
+
+  scene.hyperBalls = scene.hyperBalls || [];
+  scene.hyperBalls.push(hyperBall);
+  }
+
 }
 let patternEvents = [];
 
@@ -923,6 +980,9 @@ function movePlayer(scene) {
 }
 
 
+
+
+
 function spawnBasicShooter(balltype='monsterball') {
   // 원의 반지름 설정
   const radius = 850;
@@ -943,8 +1003,8 @@ function spawnBasicShooter(balltype='monsterball') {
   let co_speed = 1;
   switch (balltype) {
     case 'monsterball': co_speed = 1;break;
-    case 'superball': co_speed = 1.2;break;
-    case 'hyperball': co_speed = 1.5;break;
+    case 'superball': co_speed = 1.5;break;
+    case 'hyperball': co_speed = 1.2;break;
     case 'masterball': co_speed = 1;break;
   }
   const speed = 320 * co_speed;
@@ -956,8 +1016,8 @@ function spawnOctoBurst(balltype='monsterball') {
   let co_speed = 1;
   switch (balltype) {
     case 'monsterball': co_speed = 1;break;
-    case 'superball': co_speed = 1.2;break;
-    case 'hyperball': co_speed = 1.5;break;
+    case 'superball': co_speed = 1.5;break;
+    case 'hyperball': co_speed = 1.2;break;
     case 'masterball': co_speed = 1;break;
   }
   const speed = 400 * co_speed;
@@ -982,8 +1042,8 @@ function spawnLineBurst(n, balltype='monsterball') {
   let co_speed = 1;
   switch (balltype) {
     case 'monsterball': co_speed = 1;break;
-    case 'superball': co_speed = 1.2;break;
-    case 'hyperball': co_speed = 1.5;break;
+    case 'superball': co_speed = 1.5;break;
+    case 'hyperball': co_speed = 1.2;break;
     case 'masterball': co_speed = 1;break;
   }
   const speed = 400 * co_speed;
@@ -1025,7 +1085,8 @@ function patternManager(patternList, scene)
     },
     lineBurst: function (n, balltype) {
       spawnLineBurst(n, balltype);
-    }
+    },
+    
   }
 
   
@@ -1041,15 +1102,15 @@ function patternManager(patternList, scene)
   patternEvents.push(scene.time.addEvent({
     delay: 300,
     loop: true,
-    callback: () => patterns.basicShoot()
+    callback: () => patterns.basicShoot('monsterball')
   }));
 
 }
 
-const patternList = [
+const patternList = [ 
     ['lineBurst', 12, 5],['lineBurst', 24, 6], ['lineBurst', 36, 7],
-    ['lineBurst', 48, 8],['lineBurst', 60, 9], ['lineBurst', 72, 10],
-    ['lineBurst', 84, 10],['lineBurst', 90, 10], ['lineBurst', 96, 10],
+    ['lineBurst', 48, 8],['lineBurst', 60, 9, 'hyperball'], ['lineBurst', 72, 10],
+    ['lineBurst', 84, 10],['lineBurst', 90, 10, 'hyperball'], ['lineBurst', 96, 10],
     ['lineBurst', 102, 10],['lineBurst', 108, 10], ['lineBurst', 114, 10],
     ['lineBurst', 120, 10],['lineBurst', 126, 10], ['lineBurst', 132, 10],
     ['octoBurst', 7], ['octoBurst', 14], ['octoBurst', 21],
@@ -1060,8 +1121,8 @@ const patternList = [
     ['octoBurst', 75, 'superball'], ['octoBurst', 80, 'superball'],
     ['octoBurst', 85, 'superball'], ['octoBurst', 90, 'superball'],
     ['octoBurst', 95, 'superball'], ['octoBurst', 100, 'superball'],
-    ['octoBurst', 105, 'superball'], ['octoBurst', 110, 'superball'],
-    ['octoBurst', 115, 'superball'], ['octoBurst', 120, 'superball'],
+    ['octoBurst', 105, 'hyperball'], ['octoBurst', 110, 'superball'],
+    ['octoBurst', 115, 'superball'], ['octoBurst', 120, 'hyperball'],
 ]
 
 
@@ -1193,7 +1254,7 @@ function updateRankingUI(scene) {
     }
 
       // ✅ 항상 내 순위 표시
-      if (myRank && myRank > 0) {
+      if (rankingState != 2) {
         const y = -225 + entries.length * 63;
   
         // 검은 줄
@@ -1201,19 +1262,19 @@ function updateRankingUI(scene) {
           .setOrigin(0.5);
         rankingUI.add(scene.my_extra_rank_line);
   
-        const rankText = scene.add.text(-430, y, `No.${String(myRank).padStart(3, '0')}`, {
+        const rankText = scene.add.text(-430, y, `No.${myRank?.toString().padStart(3, '0') || '???'}`, {
           fontFamily: 'GSC',
           fontSize: '48px',
           color: '#000000'
         }).setOrigin(0, 0.5);
   
-        const nameText = scene.add.text(-170, y, myData?.nickname.padEnd(10, '　') || '-', {
+        const nameText = scene.add.text(-170, y, myData?.nickname.padEnd(10, '　') || username, {
           fontFamily: 'GSC',
           fontSize: '48px',
           color: '#000000'
         }).setOrigin(0, 0.5);
   
-        const timeText = scene.add.text(430, y, myData?.time ? `${myData.time.toFixed(1)}s` : '-', {
+        const timeText = scene.add.text(430, y, myData?.time ? `${myData.time.toFixed(1)}s` : '???s', {
           fontFamily: 'GSC',
           fontSize: '48px',
           color: '#000000'
