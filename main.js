@@ -38,12 +38,13 @@ const config = {
 };
 
 let scene, player, cursors, timerText, startTime, startUI, username, ssid, 
+wallet = {'monsterball' : 0, 'superball' : 0, 'hyperball': 0, 'masterball' : 0},
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 distance = 0, pokedex = 172,
 isGameStarted, isGameOver, windowManager, rankingState = 0, 
 gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText,
-rankingUI, 
+rankingUI, pokemonUI,
 monsterball_text, superball_text, hyperball_text, masterball_text,
 nicknameEditUI, inputDOM;
 let obstacles;
@@ -68,9 +69,9 @@ function preload() {
   this.load.image('emonga-right', 'image/emonga-right.png');
   this.load.image('pichu-left', 'image/pichu-left.png');
   this.load.image('pichu-right', 'image/pichu-right.png');
-  this.load.spritesheet('pichu', 'image/pichu-spritesheet.png', {
-    frameWidth:370,
-    frameHeight:400,
+  this.load.spritesheet('pichu', 'image/pichu-spritesheet2.png', {
+    frameWidth:51,
+    frameHeight:52,
   });
   this.load.spritesheet('torchic', 'image/torchic-spritesheet.png', {
     frameWidth:33,
@@ -80,10 +81,7 @@ function preload() {
     frameWidth:66,
     frameHeight:59,
   });
-  this.load.spritesheet('pichu2', 'image/pichu-spritesheet2.png', {
-    frameWidth:51,
-    frameHeight:52,
-  });
+  
   this.load.spritesheet('eevee', 'image/eevee-spritesheet.png', {
     frameWidth:64,
     frameHeight:55,
@@ -108,7 +106,7 @@ function create() {
   this.scale.setGameSize(1200,1200);
   this.anims.create({
     key: 'pichu',
-    frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 47 }),
+    frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 46 }),
     frameRate: 24,
     repeat: -1
   })
@@ -117,13 +115,7 @@ function create() {
     frames: this.anims.generateFrameNumbers('torchic', { start: 0, end: 60 }),
     frameRate: 24,
     repeat: -1
-  })
-  this.anims.create({
-    key: 'pichu2',
-    frames: this.anims.generateFrameNumbers('pichu2', { start: 0, end: 46 }),
-    frameRate: 24,
-    repeat: -1
-  })
+  })  
   this.anims.create({
     key: 'eevee',
     frames: this.anims.generateFrameNumbers('eevee', { start: 0, end: 24 }),
@@ -143,8 +135,8 @@ function create() {
     repeat: -1
   })
 
-  player = this.physics.add.sprite(600, 600, 'pichu2');
-  player.anims.play('pichu2');
+  player = this.physics.add.sprite(600, 600, 'pichu');
+  player.anims.play('pichu');
   player.setScale(1);
   player.setSize(22, 35);
   player.setOffset(14,16);
@@ -243,7 +235,7 @@ function create() {
   changeBtn.on('pointerdown', () => {
     if (isGameStarted) return;
     if (windowManager != 'nothing') return;
-    alert('아직 포켓몬 교체를 할 수 없습니다.');
+    showPokemonUI(this);
   });
 
   const rankingBtn = this.add.text(600 + 180, 670, '랭킹', {
@@ -284,10 +276,11 @@ function create() {
   const editIcon = this.add.image(userNameField.x + userNameField.width + 10, 20, 'editicon')
   .setOrigin(0).setInteractive().setScale(0.045)
   .on('pointerdown', () => {
+    if(windowManager!='nothing') return;
     showNicknameEditUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.6.0", {
+  const version = this.add.text(20, 1140, "v0.6.1", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -298,6 +291,8 @@ function create() {
   startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn, userNameField]);
   createNicknameEditUI(this);
   nicknameEditUI.setVisible(false);
+  createPokemonUI(this);
+  pokemonUI.setVisible(false);
   createGameOverUI(this);
   createRankingUI(this);
   
@@ -325,8 +320,9 @@ function create() {
     }
     sendData(data);
     distance = 0;
-    avoid_num_now = avoid_num;
-    
+    updateWalletWithAvoids(avoid_num);
+    console.log(wallet);
+    avoid_num_now = avoid_num;    
     avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0};
     
     animGameOver(this, obstacle);
@@ -693,7 +689,7 @@ function create() {
 }
 
 function setPichuAnimationSpeed(player, targetFrameRate) {
-  const animKey = 'pichu2';
+  const animKey = 'pichu';
 
   const currentAnim = player.anims.currentAnim;
   const currentFrame = player.anims.currentFrame;
@@ -908,7 +904,8 @@ function createBall (img, x, y, vx, vy, scale = 0.08*ratio) {
       hyperBall.bounceCount++;
       
       if (body.blocked.up || body.blocked.down) {
-            //hyperBall.setRotation(-hyperBall.Rotation);
+            const thisRotation = hyperBall.rotation;
+            hyperBall.setRotation(-thisRotation);
       } else if (body.blocked.left || body.blocked.right)
       { 
              hyperBall.setFlipX(!hyperBall.flipX);
@@ -1127,6 +1124,139 @@ const patternList = [
 
 
 
+function updateWalletWithAvoids(avoid_num) {
+  wallet = JSON.parse(localStorage.getItem('wallet')) || {
+    monsterball: 0,
+    superball: 0,
+    hyperball: 0,
+    masterball: 0
+  };
+
+  for (let key in avoid_num) {
+    if (wallet.hasOwnProperty(key)) {
+      wallet[key] += avoid_num[key];
+    }
+  }
+
+  localStorage.setItem('wallet', JSON.stringify(wallet));
+}
+
+
+const pokemonList = [
+  { id: 'pichu', name: '피츄', unlocked: true, image: 'pichu', condition: null , price: null , pokedex: 172 },
+  { id: 'eevee', name: '이브이', unlocked: false, image: 'eevee', condition: {time: 300} , price: { monsterball: 1000 }, pokedex: 133 },
+  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { time : 600 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  // ...7마리 더 추가
+];
+
+let ownedPokemon = JSON.parse(localStorage.getItem('ownedPokemon') || '["pichu"]');
+let selectedPokemon = localStorage.getItem('selectedPokemon') || 'pichu';
+
+
+function createPokemonUI(scene) {
+  const centerX = 600;
+  const centerY = 600;
+
+  const ui = scene.add.container(centerX, centerY).setVisible(false).setDepth(100);
+  const bg = scene.add.rectangle(0, 0, 1200, 1200, 0xfffdd0) //이쁜 하늘색 0xa2cffe
+    .setStrokeStyle(4, 0xffffff)
+    .setOrigin(0.5)
+    .setAlpha(0.98);
+  const BackBtn = scene.add.text(-520, -550, '◀뒤로', {
+    fontFamily: 'GSC',
+    fontSize: '54px',
+    color: '#000000',
+  }).setOrigin(0.5).setInteractive();
+  BackBtn.on('pointerdown', () =>
+  {
+    windowManager='nothing'
+    
+    pokemonUI.setVisible(false); 
+  })
+
+  ui.add([bg, BackBtn]);
+  // 상단 포켓몬 정보 박스
+  const infoBox = scene.add.container(0, -300);
+  const infoBG = scene.add.rectangle(0, 50, 1000, 500, 0xffffff).setStrokeStyle(4, 0x000);
+  const infoPokemonBoxBG = scene.add.rectangle(0, 25, 150, 150).setStrokeStyle(2, 0x000);
+  const infoText = scene.add.text(0, -150, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0.5);
+  const infoImage = scene.add.image(0, 25, 'pichu').setScale(2.2);
+  const actionButton = scene.add.text(0, 220, '선택됨', { fontSize: '48px',  fontFamily: 'GSC', backgroundColor: '#333', color: '#fff', padding: 10 })
+    .setInteractive().setOrigin(0.5);
+
+  infoBox.add([infoBG, infoText, infoPokemonBoxBG,infoImage, actionButton ]);
+
+  // 하단 포켓몬 박스 (5x2)
+  const boxContainer = scene.add.container(0, 150);
+  const cols = 5, rows = 2, spacing = 180;
+  pokemonList.forEach((poke, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = (col - 2) * spacing;
+    const y = row * spacing;
+
+    const boxBG = scene.add.rectangle(x, y, 150, 150, 0xffffff).setStrokeStyle(2, 0x000);
+    const image = scene.add.image(x, y, poke.image).setScale(1);
+
+    if (!ownedPokemon.includes(poke.id)) {
+      const lock = scene.add.text(x, y, '?', { fontSize: '42px', color:'#ffffff' }).setOrigin(0.5);
+      image.setTint(0x000000);
+      boxContainer.add([boxBG, image, lock]);
+    } else {
+      boxContainer.add([boxBG, image]);
+    }
+
+    boxBG.setInteractive().on('pointerdown', () => {
+      renderPokemonInfo(poke);
+    });
+  });
+
+  // 포켓몬 정보 갱신 함수
+  function renderPokemonInfo(poke) {
+    infoText.setText(poke.name);
+    infoImage.setTexture(poke.image);
+    if (ownedPokemon.includes(poke.id)) {
+      infoImage.clearTint();
+      actionButton.setText(poke.id === selectedPokemon ? '선택됨' : '선택');
+      actionButton.removeAllListeners();
+      actionButton.setInteractive().on('pointerdown', () => {
+        selectedPokemon = poke.id;
+        localStorage.setItem('selectedPokemon', selectedPokemon);
+        actionButton.setText('선택됨');
+      });
+    } else {
+      infoText.setText('???');
+      infoImage.setTint(0x000000);
+      const conditionText = Object.entries(poke.condition).map(([k, v]) => `${v}초 이상 생존시`).join(', ');
+      actionButton.setText(`${conditionText} 잠금해제`);
+      actionButton.removeAllListeners();
+      actionButton.setInteractive().on('pointerdown', () => {
+        if (canUnlock(poke.condition)) {
+          ownedPokemon.push(poke.id);
+          localStorage.setItem('ownedPokemon', JSON.stringify(ownedPokemon));
+          renderPokemonInfo(poke); // 다시 렌더링
+        } else {
+          alert('해금 조건을 만족하지 못했습니다!');
+        }
+      });
+    }
+  }
+
+  function canUnlock(condition) {
+    for (let key in condition) {
+      if (!wallet[key] || wallet[key] < condition[key]) return false;
+    }
+    return true;
+  }
+
+  ui.add([infoBox, boxContainer]);
+  pokemonUI = ui;
+}
+
+function showPokemonUI(scene) {
+  windowManager = 'pokemon';
+  pokemonUI.setVisible(true);
+}
 
 
 function initializeIdentity() {
