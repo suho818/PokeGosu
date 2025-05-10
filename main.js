@@ -280,7 +280,7 @@ function create() {
     showNicknameEditUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.6.1", {
+  const version = this.add.text(20, 1140, "v0.6.2", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -1125,13 +1125,7 @@ const patternList = [
 
 
 function updateWalletWithAvoids(avoid_num) {
-  wallet = JSON.parse(localStorage.getItem('wallet')) || {
-    monsterball: 0,
-    superball: 0,
-    hyperball: 0,
-    masterball: 0
-  };
-
+  
   for (let key in avoid_num) {
     if (wallet.hasOwnProperty(key)) {
       wallet[key] += avoid_num[key];
@@ -1162,6 +1156,33 @@ function createPokemonUI(scene) {
     .setStrokeStyle(4, 0xffffff)
     .setOrigin(0.5)
     .setAlpha(0.98);
+    const monsterball_img = scene.add.image(-330,-550,'monsterball').setScale(0.12*ratio).setOrigin(0.5)
+    const monsterball_text =  scene.add.text(-310,-550, `X${wallet['monsterball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+
+    const superball_img = scene.add.image(-110,-550,'superball').setScale(0.12*ratio).setOrigin(0.5)
+    const  superball_text =  scene.add.text(-90,-550, `X${wallet['superball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+    
+    const hyperball_img = scene.add.image(110,-550,'hyperball').setScale(0.12*ratio).setOrigin(0.5)
+    const  hyperball_text =  scene.add.text(130,-550, `X${wallet['hyperball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
+
+    const masterball_img = scene.add.image(330,-550,'masterball').setScale(0.12*ratio).setOrigin(0.5)
+    const masterball_text =  scene.add.text(350,-550, `X${wallet['masterball']}`, {
+      fontFamily: 'GSC',
+      fontSize: '30px',
+      color: '#000000'
+    }).setOrigin(0,0.5)
   const BackBtn = scene.add.text(-520, -550, '◀뒤로', {
     fontFamily: 'GSC',
     fontSize: '54px',
@@ -1173,8 +1194,15 @@ function createPokemonUI(scene) {
     
     pokemonUI.setVisible(false); 
   })
-
-  ui.add([bg, BackBtn]);
+  scene.pokemonUI_prop = {
+    monsterball_text,
+    superball_text,
+    hyperball_text,
+    masterball_text
+  };
+  ui.add([bg, BackBtn, monsterball_img, superball_img, hyperball_img, masterball_img,
+  monsterball_text, superball_text, hyperball_text, masterball_text
+  ]);
   // 상단 포켓몬 정보 박스
   const infoBox = scene.add.container(0, -300);
   const infoBG = scene.add.rectangle(0, 50, 1000, 500, 0xffffff).setStrokeStyle(4, 0x000);
@@ -1255,6 +1283,10 @@ function createPokemonUI(scene) {
 
 function showPokemonUI(scene) {
   windowManager = 'pokemon';
+  scene.pokemonUI_prop.monsterball_text.setText(`X${wallet['monsterball']}`);
+  scene.pokemonUI_prop.superball_text.setText(`X${wallet['superball']}`);
+  scene.pokemonUI_prop.hyperball_text.setText(`X${wallet['hyperball']}`);
+  scene.pokemonUI_prop.masterball_text.setText(`X${wallet['masterball']}`);
   pokemonUI.setVisible(true);
 }
 
@@ -1276,6 +1308,12 @@ function initializeIdentity() {
   else{
     username = localStorage.getItem('username');
   }
+  wallet = JSON.parse(localStorage.getItem('wallet')) || {
+    monsterball: 0,
+    superball: 0,
+    hyperball: 0,
+    masterball: 0
+  };
 }
 
 
