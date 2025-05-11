@@ -1,3 +1,5 @@
+import { preloadAssets } from './preload.js';
+
 let game;
 const screenWidth = Math.max(window.innerWidth, 800);
 const screenHeight = Math.max(window.innerHeight, 800);
@@ -37,7 +39,8 @@ const config = {
   }
 };
 
-let scene, player, cursors, timerText, startTime, startUI, username, ssid, 
+let scene, player, cursors, timerText, startTime, startUI, username, ssid,
+stat,
 wallet = {'monsterball' : 0, 'superball' : 0, 'hyperball': 0, 'masterball' : 0},
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
@@ -60,49 +63,12 @@ function isMobileDevice() {
 }
 
 function preload() {
-  
-  this.load.plugin('rexinputtextplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexinputtextplugin.min.js', true);
-
-
-  this.load.image('editicon', 'image/editicon.png');
-  this.load.image('emonga-left', 'image/emonga-left.png');
-  this.load.image('emonga-right', 'image/emonga-right.png');
-  this.load.image('pichu-left', 'image/pichu-left.png');
-  this.load.image('pichu-right', 'image/pichu-right.png');
-  this.load.spritesheet('pichu', 'image/pichu-spritesheet2.png', {
-    frameWidth:51,
-    frameHeight:52,
-  });
-  this.load.spritesheet('torchic', 'image/torchic-spritesheet.png', {
-    frameWidth:33,
-    frameHeight:61,
-  });
-  this.load.spritesheet('emolga', 'image/emolga-spritesheet.png', {
-    frameWidth:66,
-    frameHeight:59,
-  });
-  
-  this.load.spritesheet('eevee', 'image/eevee-spritesheet.png', {
-    frameWidth:64,
-    frameHeight:55,
-  });
-  this.load.spritesheet('pachirisu', 'image/pachirisu-spritesheet.png', {
-    frameWidth:57,
-    frameHeight:75,
-  });
-  this.load.image('monster-ball', 'image/monster-ball.png');
-  this.load.image('monsterball', 'image/monsterball.png');
-  this.load.image('superball', 'image/superball.png');
-  this.load.image('hyperball', 'image/hyperball.png');
-  this.load.image('masterball', 'image/masterball.png');
+   preloadAssets(this);
 }
-let player_img = {
-  left: 'pichu-left',
-  right: 'pichu-right'
-}
+
 
 function create() {
-  scene = this
+  scene = this;
   this.scale.setGameSize(1200,1200);
   this.anims.create({
     key: 'pichu',
@@ -134,6 +100,13 @@ function create() {
     frameRate: 24,
     repeat: -1
   })
+  this.anims.create({
+    key: 'celebi',
+    frames: this.anims.generateFrameNumbers('celebi', { start: 0, end: 98 }),
+    frameRate: 24,
+    repeat: -1
+  })
+  
 
   player = this.physics.add.sprite(600, 600, 'pichu');
   player.anims.play('pichu');
@@ -295,8 +268,11 @@ function create() {
   pokemonUI.setVisible(false);
   createGameOverUI(this);
   createRankingUI(this);
+  initializeStat();
   
  
+
+  
 
 //충돌 감지
   this.physics.add.overlap(player, obstacles, (player, obstacle) => { 
@@ -319,6 +295,7 @@ function create() {
       pokedex: pokedex
     }
     sendData(data);
+    //updateStat(stat, data);
     distance = 0;
     updateWalletWithAvoids(avoid_num);
     console.log(wallet);
@@ -330,6 +307,7 @@ function create() {
       windowManager = 'gameover';
     showGameOverUI(this)});
 });
+
   function resetStartUIPosition() {
     title.setPosition(600, 600 - 450);
     title.setAlpha(1);
@@ -1106,20 +1084,28 @@ function patternManager(patternList, scene)
 
 const patternList = [ 
     ['lineBurst', 12, 5],['lineBurst', 24, 6], ['lineBurst', 36, 7],
-    ['lineBurst', 48, 8],['lineBurst', 60, 9, 'hyperball'], ['lineBurst', 72, 10],
-    ['lineBurst', 84, 10],['lineBurst', 90, 10, 'hyperball'], ['lineBurst', 96, 10],
-    ['lineBurst', 102, 10],['lineBurst', 108, 10], ['lineBurst', 114, 10],
-    ['lineBurst', 120, 10],['lineBurst', 126, 10], ['lineBurst', 132, 10],
+    ['lineBurst', 48, 8],['lineBurst', 60, 9, 'superball'], 
+    ['lineBurst', 66, 10, 'superball'], 
+    ['lineBurst', 72, 10, 'superball'],
+    ['lineBurst', 78, 10, 'superball'],
+    ['lineBurst', 84, 10, 'superball'],
+    ['lineBurst', 90, 5, 'hyperball'], ['lineBurst', 96, 10],
+    ['lineBurst', 102, 7, 'hyperball'],
+    ['lineBurst', 108, 10], 
+    ['lineBurst', 114, 10, 'hyperball'],
+    ['lineBurst', 120, 10, 'hyperball'],
+    ['lineBurst', 126, 10, 'superball'], ['lineBurst', 132, 10, 'hyperball'],
     ['octoBurst', 7], ['octoBurst', 14], ['octoBurst', 21],
     ['octoBurst', 28], ['octoBurst', 35], ['octoBurst', 42, 'superball'],
     ['octoBurst', 45, 'superball'], ['octoBurst', 50, 'superball'],
     ['octoBurst', 55, 'superball'], ['octoBurst', 60, 'superball'],
     ['octoBurst', 65, 'superball'], ['octoBurst', 70, 'superball'],
     ['octoBurst', 75, 'superball'], ['octoBurst', 80, 'superball'],
-    ['octoBurst', 85, 'superball'], ['octoBurst', 90, 'superball'],
-    ['octoBurst', 95, 'superball'], ['octoBurst', 100, 'superball'],
-    ['octoBurst', 105, 'hyperball'], ['octoBurst', 110, 'superball'],
+    ['octoBurst', 85, 'superball'], ['octoBurst', 110, 'hyperball'],
     ['octoBurst', 115, 'superball'], ['octoBurst', 120, 'hyperball'],
+    ['octoBurst', 125, 'superball'], ['octoBurst', 130, 'hyperball'],
+    ['octoBurst', 135, 'superball'], ['octoBurst', 140, 'hyperball'],
+    ['octoBurst', 145, 'superball'], ['octoBurst', 150, 'hyperball']
 ]
 
 
@@ -1138,8 +1124,14 @@ function updateWalletWithAvoids(avoid_num) {
 
 const pokemonList = [
   { id: 'pichu', name: '피츄', unlocked: true, image: 'pichu', condition: null , price: null , pokedex: 172 },
-  { id: 'eevee', name: '이브이', unlocked: false, image: 'eevee', condition: {time: 300} , price: { monsterball: 1000 }, pokedex: 133 },
-  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { time : 600 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {time: 30} , price: { monsterball: 1000 }, pokedex: 393 },
+  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
+  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+
   // ...7마리 더 추가
 ];
 
@@ -1224,7 +1216,7 @@ function createPokemonUI(scene) {
     const y = row * spacing;
 
     const boxBG = scene.add.rectangle(x, y, 150, 150, 0xffffff).setStrokeStyle(2, 0x000);
-    const image = scene.add.image(x, y, poke.image).setScale(1);
+    const image = scene.add.image(x, y, poke.image,poke.frame || 1).setScale(1);
 
     if (!ownedPokemon.includes(poke.id)) {
       const lock = scene.add.text(x, y, '?', { fontSize: '42px', color:'#ffffff' }).setOrigin(0.5);
@@ -1242,7 +1234,7 @@ function createPokemonUI(scene) {
   // 포켓몬 정보 갱신 함수
   function renderPokemonInfo(poke) {
     infoText.setText(poke.name);
-    infoImage.setTexture(poke.image);
+    infoImage.setTexture(poke.image, poke.frame || 1);
     if (ownedPokemon.includes(poke.id)) {
       infoImage.clearTint();
       actionButton.setText(poke.id === selectedPokemon ? '선택됨' : '선택');
@@ -1272,7 +1264,7 @@ function createPokemonUI(scene) {
 
   function canUnlock(condition) {
     for (let key in condition) {
-      if (!wallet[key] || wallet[key] < condition[key]) return false;
+      if (stat[key] < condition[key]) return false;
     }
     return true;
   }
@@ -1288,6 +1280,72 @@ function showPokemonUI(scene) {
   scene.pokemonUI_prop.hyperball_text.setText(`X${wallet['hyperball']}`);
   scene.pokemonUI_prop.masterball_text.setText(`X${wallet['masterball']}`);
   pokemonUI.setVisible(true);
+}
+
+function initializeStat() {
+  
+  let stat = JSON.parse(localStorage.getItem('stat') || 'null');
+
+  if (!stat) {
+    stat = {
+      best: 0,
+      totalDistance: 0,
+      totalSurvivalTime: 0,
+      totalPlayCount: 0,
+      totalAvoid_p: 0,
+      totalAvoid_s: 0,
+      totalAvoid_h: 0,
+      totalAvoid_m: 0,
+      perPokemon: {}
+    };
+
+    for (const name of pokemonList) {
+      stat.perPokemon[name] = {
+        best: 0,
+        playCount: 0,
+        distance: 0,
+        survivalTime: 0,
+        Avoid_p: 0,
+        Avoid_s: 0,
+        Avoid_h: 0,
+        Avoid_m: 0,
+      };
+    }
+
+    localStorage.setItem('stat', JSON.stringify(stat));
+  }
+
+  return stat;
+}
+
+function updateStat(stat, result) {
+  stat.totalPlayCount += 1;
+  stat.totalSurvivalTime += result.time;
+  stat.totalDistance += result.distance;
+  stat.totalAvoid_p += result.avoid_num['mosterball'];
+  stat.totalAvoid_s += result.avoid_num['superball'];
+  stat.totalAvoid_h += result.avoid_num['hyperball'];
+  stat.totalAvoid_m += result.avoid_num['masterball'];
+  stat.best = Math.max(stat.best, result.time);
+
+  const pokedexMap = {'172': 'pichu' }
+  const p = stat.perPokemon[pokedexMap(result.pokedex)];
+  if (p) {
+    p.best = Math.max(p.best, result.time);
+    p.playCount += 1;
+    p.distance += result.distance;
+    p.survivalTime += result.time;
+    p.totalAvoid_p += result.avoid_num['mosterball'];
+    p.totalAvoid_s += result.avoid_num['superball'];
+    p.totalAvoid_h += result.avoid_num['hyperball'];
+    p.totalAvoid_m += result.avoid_num['masterball'];
+  }
+
+  saveStat(stat); // 저장
+}
+
+function saveStat(stat) {
+  localStorage.setItem('stat', JSON.stringify(stat));
 }
 
 
@@ -1648,3 +1706,4 @@ document.fonts.ready.then(() => {
   setupDynamicJoystick();
   
 });
+
