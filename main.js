@@ -268,7 +268,7 @@ function create() {
   pokemonUI.setVisible(false);
   createGameOverUI(this);
   createRankingUI(this);
-  initializeStat();
+  stat = initializeStat();
   
  
 
@@ -1034,14 +1034,14 @@ function spawnLineBurst(n, balltype='monsterball') {
   let x_dir = (600-x)/600
   for (let i = 0; i < n; i++) {
     y = 1200/(n+1)*(i+1);
-    createBall(balltype, x, y, x_dir*speed, 0, scale = 0.08*ratio);
+    createBall(balltype, x, y, x_dir*speed, 0, 0.08*ratio);
   }
 }
   else if (y==0 || y==1200) {
     let y_dir = (600-y)/600
     for (let i = 0; i < n; i++) {
       x = 1200/(n+1)*(i+1);
-      createBall(balltype, x, y, 0, y_dir*speed, scale = 0.08*ratio);
+      createBall(balltype, x, y, 0, y_dir*speed,0.08*ratio);
     }
   }
 }
@@ -1124,13 +1124,13 @@ function updateWalletWithAvoids(avoid_num) {
 
 const pokemonList = [
   { id: 'pichu', name: '피츄', unlocked: true, image: 'pichu', condition: null , price: null , pokedex: 172 },
-  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {time: 30} , price: { monsterball: 1000 }, pokedex: 393 },
-  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
-  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { time : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {best: 30} , price: { monsterball: 1000 }, pokedex: 393 },
+  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
+  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
 
   // ...7마리 더 추가
 ];
@@ -1263,6 +1263,7 @@ function createPokemonUI(scene) {
   }
 
   function canUnlock(condition) {
+    console.log(stat)
     for (let key in condition) {
       if (stat[key] < condition[key]) return false;
     }
