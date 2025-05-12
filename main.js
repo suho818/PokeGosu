@@ -295,7 +295,8 @@ function create() {
       pokedex: pokedex
     }
     sendData(data);
-    //updateStat(stat, data);
+    updateStat(stat, data);
+    console.log(stat);
     distance = 0;
     updateWalletWithAvoids(avoid_num);
     console.log(wallet);
@@ -1124,17 +1125,18 @@ function updateWalletWithAvoids(avoid_num) {
 
 const pokemonList = [
   { id: 'pichu', name: '피츄', unlocked: true, image: 'pichu', condition: null , price: null , pokedex: 172 },
-  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {best: 30} , price: { monsterball: 1000 }, pokedex: 393 },
-  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
-  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { best : 60 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {best: 150} , price: { monsterball: 10000 }, pokedex: 393 },
+  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
+  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
 
   // ...7마리 더 추가
 ];
 
+let unlockedPokemon = JSON.parse(localStorage.getItem('unlockedPokemon') || '["pichu"]');
 let ownedPokemon = JSON.parse(localStorage.getItem('ownedPokemon') || '["pichu"]');
 let selectedPokemon = localStorage.getItem('selectedPokemon') || 'pichu';
 
@@ -1218,7 +1220,7 @@ function createPokemonUI(scene) {
     const boxBG = scene.add.rectangle(x, y, 150, 150, 0xffffff).setStrokeStyle(2, 0x000);
     const image = scene.add.image(x, y, poke.image,poke.frame || 1).setScale(1);
 
-    if (!ownedPokemon.includes(poke.id)) {
+    if (!unlockedPokemon.includes(poke.id)) {
       const lock = scene.add.text(x, y, '?', { fontSize: '42px', color:'#ffffff' }).setOrigin(0.5);
       image.setTint(0x000000);
       boxContainer.add([boxBG, image, lock]);
@@ -1235,15 +1237,26 @@ function createPokemonUI(scene) {
   function renderPokemonInfo(poke) {
     infoText.setText(poke.name);
     infoImage.setTexture(poke.image, poke.frame || 1);
-    if (ownedPokemon.includes(poke.id)) {
+    if (unlockedPokemon.includes(poke.id)) {
       infoImage.clearTint();
+
+      actionButton.setText("구매하기");
+      actionButton.removeAllListeners();
+      actionButton.setInteractive().on('pointerdown', () => {
+       purchase(poke.price);
+       console.log('구매중');
+         
+      })
+
+      if (ownedPokemon.includes(poke.id)){
       actionButton.setText(poke.id === selectedPokemon ? '선택됨' : '선택');
       actionButton.removeAllListeners();
       actionButton.setInteractive().on('pointerdown', () => {
         selectedPokemon = poke.id;
         localStorage.setItem('selectedPokemon', selectedPokemon);
         actionButton.setText('선택됨');
-      });
+      
+      });}
     } else {
       infoText.setText('???');
       infoImage.setTint(0x000000);
@@ -1252,15 +1265,16 @@ function createPokemonUI(scene) {
       actionButton.removeAllListeners();
       actionButton.setInteractive().on('pointerdown', () => {
         if (canUnlock(poke.condition)) {
-          ownedPokemon.push(poke.id);
-          localStorage.setItem('ownedPokemon', JSON.stringify(ownedPokemon));
+          unlockedPokemon.push(poke.id);
+      localStorage.setItem('unlockedPokemon', JSON.stringify(unlockedPokemon));
+
           renderPokemonInfo(poke); // 다시 렌더링
         } else {
           alert('해금 조건을 만족하지 못했습니다!');
         }
       });
     }
-  }
+
 
   function canUnlock(condition) {
     console.log(stat)
@@ -1270,52 +1284,90 @@ function createPokemonUI(scene) {
     return true;
   }
 
+  function purchase(price){
+    for (let cost in price) {
+      if (wallet[cost] < price[cost]) {alert("구매실패"); return false};
+    }
+    for (let cost in price) {
+      wallet[cost] -= price[cost];
+      localStorage.setItem('wallet', JSON.stringify(wallet));
+      updateWallet(scene);
+      renderPokemonInfo(poke);
+      ownedPokemon.push(poke.id);
+      localStorage.setItem('ownedPokemon', JSON.stringify(ownedPokemon));
+      alert("구매성공");
+    }
+  }
+}
+
   ui.add([infoBox, boxContainer]);
   pokemonUI = ui;
 }
 
 function showPokemonUI(scene) {
   windowManager = 'pokemon';
+  updateWallet(scene);
+  pokemonUI.setVisible(true);
+}
+
+function updateWallet(scene) {
   scene.pokemonUI_prop.monsterball_text.setText(`X${wallet['monsterball']}`);
   scene.pokemonUI_prop.superball_text.setText(`X${wallet['superball']}`);
   scene.pokemonUI_prop.hyperball_text.setText(`X${wallet['hyperball']}`);
   scene.pokemonUI_prop.masterball_text.setText(`X${wallet['masterball']}`);
-  pokemonUI.setVisible(true);
 }
 
 function initializeStat() {
-  
-  let stat = JSON.parse(localStorage.getItem('stat') || 'null');
+  // 최신 구조 선언 (최신 포켓몬 목록 포함)
+  let stat = {
+    best: 0,
+    totalDistance: 0,
+    totalSurvivalTime: 0,
+    totalPlayCount: 0,
+    totalAvoid_p: 0,
+    totalAvoid_s: 0,
+    totalAvoid_h: 0,
+    totalAvoid_m: 0,
+    perPokemon: {}
+  };
 
-  if (!stat) {
-    stat = {
+  for (const pokemon of pokemonList) {
+    stat.perPokemon[pokemon.id] = {
       best: 0,
-      totalDistance: 0,
-      totalSurvivalTime: 0,
-      totalPlayCount: 0,
-      totalAvoid_p: 0,
-      totalAvoid_s: 0,
-      totalAvoid_h: 0,
-      totalAvoid_m: 0,
-      perPokemon: {}
+      playCount: 0,
+      distance: 0,
+      survivalTime: 0,
+      Avoid_p: 0,
+      Avoid_s: 0,
+      Avoid_h: 0,
+      Avoid_m: 0,
     };
-
-    for (const name of pokemonList) {
-      stat.perPokemon[name] = {
-        best: 0,
-        playCount: 0,
-        distance: 0,
-        survivalTime: 0,
-        Avoid_p: 0,
-        Avoid_s: 0,
-        Avoid_h: 0,
-        Avoid_m: 0,
-      };
-    }
-
-    localStorage.setItem('stat', JSON.stringify(stat));
   }
 
+  // 기존 localStorage에서 가져와 병합
+  let savedStat = JSON.parse(localStorage.getItem('stat') || 'null');
+  if (savedStat) {
+    console.log(savedStat);
+    // 최상위 필드 병합
+    for (let key in stat) {
+      if (savedStat[key] !== undefined && key !== stat.perPokemon) {
+        stat[key] = savedStat[key];
+      }
+    }
+
+    // perPokemon 병합 (새 포켓몬이 추가되었을 때도 대비)
+    for (let id in stat.perPokemon) {
+      if (!savedStat.perPokemon || !savedStat.perPokemon[id]) continue;
+      for (let subKey in stat.perPokemon[id]) {
+        if (savedStat.perPokemon[id][subKey] !== undefined) {
+          stat.perPokemon[id][subKey] = savedStat.perPokemon[id][subKey];
+        }
+      }
+    }
+  }
+
+  // 항상 최신 구조 유지
+  saveStat(stat);
   return stat;
 }
 
@@ -1323,23 +1375,23 @@ function updateStat(stat, result) {
   stat.totalPlayCount += 1;
   stat.totalSurvivalTime += result.time;
   stat.totalDistance += result.distance;
-  stat.totalAvoid_p += result.avoid_num['mosterball'];
+  stat.totalAvoid_p += result.avoid_num['monsterball'];
   stat.totalAvoid_s += result.avoid_num['superball'];
   stat.totalAvoid_h += result.avoid_num['hyperball'];
   stat.totalAvoid_m += result.avoid_num['masterball'];
   stat.best = Math.max(stat.best, result.time);
 
   const pokedexMap = {'172': 'pichu' }
-  const p = stat.perPokemon[pokedexMap(result.pokedex)];
+  const p = stat.perPokemon[pokedexMap[result.pokedex]];
   if (p) {
     p.best = Math.max(p.best, result.time);
     p.playCount += 1;
     p.distance += result.distance;
     p.survivalTime += result.time;
-    p.totalAvoid_p += result.avoid_num['mosterball'];
-    p.totalAvoid_s += result.avoid_num['superball'];
-    p.totalAvoid_h += result.avoid_num['hyperball'];
-    p.totalAvoid_m += result.avoid_num['masterball'];
+    p.Avoid_p += result.avoid_num['monsterball'];
+    p.Avoid_s += result.avoid_num['superball'];
+    p.Avoid_h += result.avoid_num['hyperball'];
+    p.Avoid_m += result.avoid_num['masterball'];
   }
 
   saveStat(stat); // 저장
