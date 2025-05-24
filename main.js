@@ -199,6 +199,7 @@ function create() {
       startTime = this.time.now;
       
       editIcon.setVisible(0);
+      setupIcon.setVisible(0);
       this.time.delayedCall(600, () => 
       {
         startUI.setVisible(true);
@@ -469,31 +470,32 @@ function createSetupUI(scene) {
   setupUI = scene.add.container(centerX, centerY).setVisible(false).setAlpha(1);
   setupUI.scaleX = 0;
 
-  const bg = scene.add.rectangle(0, 0, 1000, 1000, 0x333344)
+  const bg = scene.add.rectangle(0, 0, 700, 700, 0x333344)
     .setStrokeStyle(4, 0xffffff)
     .setOrigin(0.5)
     .setAlpha(0.95);
 
   // 타이틀
-  const title = scene.add.text(0, -410, '설정', {
+  const title = scene.add.text(0, -290, '설정', {
     fontFamily: 'GSC',
-    fontSize: '100px',
+    fontSize: '75px',
     color: '#ffffff'
   }).setOrigin(0.5);
 
-  const BackBtn = scene.add.text(-420, -450, '◀뒤로', {
-    fontFamily: 'GSC',
-    fontSize: '54px',
-    color: '#fff',
-  }).setOrigin(0.5).setInteractive();
-  BackBtn.on('pointerdown', () =>
+  const cancelBtn = scene.add.text(328, -325, 'X', {
+      fontFamily: 'GSC',
+      fontSize: '45px',
+      color: '#333',
+      backgroundColor: '#fff',
+    }).setOrigin(0.5).setInteractive();
+  cancelBtn.on('pointerdown', () =>
   {    
     windowManager='nothing'
     setupUI.setVisible(false);
   })
 
   // 🎚 배경음악 슬라이더
-  const bgmVolumeText = scene.add.text(-180, -180, `음악`, {
+  const bgmVolumeText = scene.add.text(-240, -100, `음악`, {
     fontFamily: 'GSC',
     fontSize: '42px',
     color: '#ffffff'
@@ -501,13 +503,13 @@ function createSetupUI(scene) {
 
   const slider1 = scene.rexUI.add.slider({
     x: 0,
-    y: -180,
-    width: 200,
+    y: -100,
+    width: 350,
     height: 20,
     orientation: 'x',
-    track: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0x888888),
-    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0xffffff),
-    thumb: scene.rexUI.add.roundRectangle(0,0,0,0,10, 0xffffff),
+    track: scene.rexUI.add.roundRectangle(0,0,0,0,9, 0x888888),
+    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,8, 0xffffff),
+    thumb: scene.rexUI.add.roundRectangle(0,0,0,36,10, 0xffffff),
     value: bgm.volume * 2,
     space: {
                 top: 4,
@@ -522,7 +524,7 @@ function createSetupUI(scene) {
   }).layout();
 
   // 🎚 배경음악 슬라이더
-  const soundVolumeText = scene.add.text(-180, -280, `효과음`, {
+  const soundVolumeText = scene.add.text(-240, -200, `효과음`, {
     fontFamily: 'GSC',
     fontSize: '42px',
     color: '#ffffff'
@@ -530,13 +532,13 @@ function createSetupUI(scene) {
 
   const slider2 = scene.rexUI.add.slider({
     x: 0,
-    y: -280,
-    width: 200,
+    y: -200,
+    width: 350,
     height: 20,
     orientation: 'x',
-    track: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0x888888),
-    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0xffffff),
-    thumb: scene.rexUI.add.roundRectangle(0,0,0,0,10, 0xffffff),
+    track: scene.rexUI.add.roundRectangle(0,0,0,0,9, 0x888888),
+    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,8, 0xffffff),
+    thumb: scene.rexUI.add.roundRectangle(0,0,0,36,10, 0xffffff),
     value: 1,
     space: {
                 top: 4,
@@ -551,26 +553,26 @@ function createSetupUI(scene) {
   }).layout();
 
   // 🎶 배경음악 변경
-  const bgmNameText = scene.add.text(0, 0, `곡: ${bgmList[currentBgmIndex]}`, {
+  const bgmNameText = scene.add.text(0, 0, `${bgmList[currentBgmIndex]}`, {
     fontFamily: 'GSC',
-    fontSize: '48px',
+    fontSize: '42px',
     color: '#ffffff'
   }).setOrigin(0.5);
 
-  const bgmPrev = scene.add.text(-100, 80, '◀', {
+  const bgmPrev = scene.add.text(-20, 80, '◀', {
     fontSize: '48px',
     color: '#ffffff'
   }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
     changeBgm(-1);
-    bgmNameText.setText(`곡: ${bgmList[currentBgmIndex]}`);
+    bgmNameText.setText(`${bgmList[currentBgmIndex]}`);
   });
 
-  const bgmNext = scene.add.text(100, 80, '▶', {
+  const bgmNext = scene.add.text(20, 80, '▶', {
     fontSize: '48px',
     color: '#ffffff'
   }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
     changeBgm(1);
-    bgmNameText.setText(`곡: ${bgmList[currentBgmIndex]}`);
+    bgmNameText.setText(`${bgmList[currentBgmIndex]}`);
   });
 
   // 🔁 반복 재생 ON/OFF 버튼
@@ -586,7 +588,7 @@ function createSetupUI(scene) {
 
   
 
-  setupUI.add([bg, title, bgmVolumeText, soundVolumeText, slider1, slider2, bgmNameText, bgmPrev, bgmNext, BackBtn, loopBtn]);
+  setupUI.add([bg, title, bgmVolumeText, soundVolumeText, slider1, slider2, bgmNameText, bgmPrev, bgmNext, cancelBtn, loopBtn]);
 }
 
 function changeBgm(delta) {
@@ -753,6 +755,7 @@ function showSetupUI(scene) {
       player.scale = 1;
       player.angle = 0;
       editIcon.setVisible(true);
+      setupIcon.setVisible(true);
       restartGame(); // 🚨 이 함수도 외부에 정의돼 있어야 합니다!
       scene.physics.world.resume(); 
     });

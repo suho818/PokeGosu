@@ -47,4 +47,7 @@ export function preloadAssets(scene) {
   scene.load.audio('Infinite Stairs', 'audio/bgm/Infinite Stairs.mp3');
   scene.load.audio('Lake', 'audio/bgm/Lake.mp3');
   scene.load.audio('Login', 'audio/bgm/Login.mp3');
+
+  scene.load.audio('Champion Cynthia', 'audio/bgm/Champion Cynthia.mp3');
+  scene.load.audio('Champion Red', 'audio/bgm/Champion Red.mp3');
 }
