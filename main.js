@@ -49,7 +49,7 @@ isGameStarted, isGameOver, windowManager, rankingState = 0,
 gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText,
 rankingUI, pokemonUI,
 monsterball_text, superball_text, hyperball_text, masterball_text,
-nicknameEditUI, inputDOM;
+nicknameEditUI, inputDOM, setupUI, bgmList, bgm, currentBgmIndex;
 let obstacles;
 let elapsedTime;
 const colorbox = {
@@ -69,6 +69,16 @@ function preload() {
 
 function create() {
   scene = this;
+  // create 함수에서 음악 초기화
+  bgmList = ['My World', 'Lake', 'Login', 'Infinite Stairs'];
+  currentBgmIndex = 0;
+
+  bgm = this.sound.add(bgmList[currentBgmIndex], {
+  loop: true,
+  volume: 0.2
+});
+  bgm.play();
+
   this.scale.setGameSize(1200,1200);
   this.anims.create({
     key: 'pichu',
@@ -253,6 +263,13 @@ function create() {
     showNicknameEditUI(this);
   });
 
+  const setupIcon = this.add.image(1140, 20, 'setupicon')
+  .setOrigin(0).setInteractive().setScale(0.08)
+  .on('pointerdown', () => {
+    if(windowManager!='nothing') return;
+    showSetupUI(this);
+  });
+
   const version = this.add.text(20, 1140, "v0.6.2", {
     fontFamily: 'GSC',
     fontSize: '40px',
@@ -264,6 +281,7 @@ function create() {
   startUI.add([title, startBtn, changeBtn, rankingBtn, statisticBtn, userNameField]);
   createNicknameEditUI(this);
   nicknameEditUI.setVisible(false);
+  createSetupUI(this);
   createPokemonUI(this);
   pokemonUI.setVisible(false);
   createGameOverUI(this);
@@ -352,25 +370,25 @@ function create() {
     nicknameEditUI = container;
   
     // 반투명 배경
-    const bg = scene.add.rectangle(0, 0, 700, 480, 0xfbb917, 0.95)
+    const bg = scene.add.rectangle(0, 0, 700, 400, 0xfbb917, 0.95)
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5);
   
     // 타이틀
-    const title = scene.add.text(0, -180, '닉네임을 변경하시겠습니까?', {
+    const title = scene.add.text(0, -140, '닉네임을 변경하시겠습니까?', {
       fontFamily: 'GSC',
       fontSize: '50px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    const explain = scene.add.text(0, -120, '※변경을 완료해도, 랭킹에 등록된 닉네임은 변하지 않습니다.', {
+    const explain = scene.add.text(0, -80, '※변경을 완료해도, 랭킹에 등록된 닉네임은 변하지 않습니다.', {
       fontFamily: 'GSC',
       fontSize: '30px',
       color: '#ffffff'
     }).setOrigin(0.5);
   
     // 입력 필드
-    inputDOM = scene.add.rexInputText(0, -50, 500, 75, { 
+    inputDOM = scene.add.rexInputText(0, 10, 500, 75, { 
       id: 'nicknameInput',
       placeholder: `${username}`,
       maxLength: 10,
@@ -384,7 +402,7 @@ function create() {
   
    
     // 취소 버튼
-    const cancelBtn = scene.add.text(-80, 100, '취소', {
+    const cancelBtn = scene.add.text(-80, 120, '취소', {
       fontFamily: 'GSC',
       fontSize: '45px',
       color: '#fff',
@@ -399,7 +417,7 @@ function create() {
     });
   
     // 확인 버튼
-    const confirmBtn = scene.add.text(80, 100, '변경', {
+    const confirmBtn = scene.add.text(80, 120, '변경', {
       fontFamily: 'GSC',
       fontSize: '45px',
       color: '#fff',
@@ -443,6 +461,157 @@ function create() {
       ease: 'Sine.easeOut'
     });
   }
+
+function createSetupUI(scene) {
+  const centerX = 600;
+  const centerY = 600;
+
+  setupUI = scene.add.container(centerX, centerY).setVisible(false).setAlpha(1);
+  setupUI.scaleX = 0;
+
+  const bg = scene.add.rectangle(0, 0, 1000, 1000, 0x333344)
+    .setStrokeStyle(4, 0xffffff)
+    .setOrigin(0.5)
+    .setAlpha(0.95);
+
+  // 타이틀
+  const title = scene.add.text(0, -410, '설정', {
+    fontFamily: 'GSC',
+    fontSize: '100px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const BackBtn = scene.add.text(-420, -450, '◀뒤로', {
+    fontFamily: 'GSC',
+    fontSize: '54px',
+    color: '#fff',
+  }).setOrigin(0.5).setInteractive();
+  BackBtn.on('pointerdown', () =>
+  {    
+    windowManager='nothing'
+    setupUI.setVisible(false);
+  })
+
+  // 🎚 배경음악 슬라이더
+  const bgmVolumeText = scene.add.text(-180, -180, `음악`, {
+    fontFamily: 'GSC',
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const slider1 = scene.rexUI.add.slider({
+    x: 0,
+    y: -180,
+    width: 200,
+    height: 20,
+    orientation: 'x',
+    track: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0x888888),
+    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0xffffff),
+    thumb: scene.rexUI.add.roundRectangle(0,0,0,0,10, 0xffffff),
+    value: bgm.volume * 2,
+    space: {
+                top: 4,
+                bottom: 4
+            },
+    
+    input: 'drag',
+    valuechangeCallback: function (value) {
+      bgm.setVolume(value/2);
+    },
+    
+  }).layout();
+
+  // 🎚 배경음악 슬라이더
+  const soundVolumeText = scene.add.text(-180, -280, `효과음`, {
+    fontFamily: 'GSC',
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const slider2 = scene.rexUI.add.slider({
+    x: 0,
+    y: -280,
+    width: 200,
+    height: 20,
+    orientation: 'x',
+    track: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0x888888),
+    indicater: scene.rexUI.add.roundRectangle(0,0,0,0,6, 0xffffff),
+    thumb: scene.rexUI.add.roundRectangle(0,0,0,0,10, 0xffffff),
+    value: 1,
+    space: {
+                top: 4,
+                bottom: 4
+            },
+    
+    input: 'drag',
+    valuechangeCallback: function (value) {
+      
+    },
+    
+  }).layout();
+
+  // 🎶 배경음악 변경
+  const bgmNameText = scene.add.text(0, 0, `곡: ${bgmList[currentBgmIndex]}`, {
+    fontFamily: 'GSC',
+    fontSize: '48px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const bgmPrev = scene.add.text(-100, 80, '◀', {
+    fontSize: '48px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
+    changeBgm(-1);
+    bgmNameText.setText(`곡: ${bgmList[currentBgmIndex]}`);
+  });
+
+  const bgmNext = scene.add.text(100, 80, '▶', {
+    fontSize: '48px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
+    changeBgm(1);
+    bgmNameText.setText(`곡: ${bgmList[currentBgmIndex]}`);
+  });
+
+  // 🔁 반복 재생 ON/OFF 버튼
+  let isLooping = bgm.loop;
+  const loopBtn = scene.add.text(0, 140, `반복 재생: ${isLooping ? 'ON' : 'OFF'}`, {
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
+    isLooping = !isLooping;
+    bgm.setLoop(isLooping);
+    loopBtn.setText(`반복 재생: ${isLooping ? 'ON' : 'OFF'}`);
+  });
+
+  
+
+  setupUI.add([bg, title, bgmVolumeText, soundVolumeText, slider1, slider2, bgmNameText, bgmPrev, bgmNext, BackBtn, loopBtn]);
+}
+
+function changeBgm(delta) {
+  bgm.stop();
+  currentBgmIndex = (currentBgmIndex + delta + bgmList.length) % bgmList.length;
+  bgm = game.scene.keys.default.sound.add(bgmList[currentBgmIndex], {
+    loop: true,
+    volume: Math.min(1, Math.max(0, bgm.volume)) // 유지
+  });
+  bgm.play();
+}
+
+function showSetupUI(scene) {
+  windowManager = 'setup';
+  scene.children.bringToTop(setupUI);
+  setupUI.setVisible(true);
+  setupUI.setScale(0);
+  scene.tweens.add({
+    targets: setupUI,
+    scale: 1,
+    duration: 300,
+    ease: 'Sine.easeOut'
+  });
+}
+
 
   
   function createGameOverUI(scene) {

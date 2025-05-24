@@ -22,9 +22,14 @@ const pokemonList = [
 
 export function preloadAssets(scene) {
     scene.load.plugin('rexinputtextplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexinputtextplugin.min.js', true);
-
+    scene.load.scenePlugin({
+  key: 'rexuiplugin',
+  url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+  sceneKey: 'rexUI'
+});
 
   scene.load.image('editicon', 'image/editicon.png');
+  scene.load.image('setupicon', 'image/setupicon.png');
   pokemonList.forEach(pokemon => {
   scene.load.spritesheet(pokemon.name, `image/ingame/pokemon-spritesheet/${pokemon.name}-spritesheet.png`, {
     frameWidth: pokemon.width,
@@ -36,4 +41,10 @@ export function preloadAssets(scene) {
   scene.load.image('superball', 'image/superball.png');
   scene.load.image('hyperball', 'image/hyperball.png');
   scene.load.image('masterball', 'image/masterball.png');
+
+
+  scene.load.audio('My World', 'audio/bgm/My World.mp3');
+  scene.load.audio('Infinite Stairs', 'audio/bgm/Infinite Stairs.mp3');
+  scene.load.audio('Lake', 'audio/bgm/Lake.mp3');
+  scene.load.audio('Login', 'audio/bgm/Login.mp3');
 }
