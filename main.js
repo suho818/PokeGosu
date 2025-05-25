@@ -507,6 +507,7 @@ function createSetupUI(scene) {
     color: '#ffffff'
   }).setOrigin(0.5);
   bgm.setVolume(0.15);
+  console.log(`현재 볼륨은${(bgm.volume).toFixed(2)}입니다.}`)
   const bgmVolumeText = scene.add.text(240, -100, `${(bgm.volume*100).toFixed(0)}`, {
     fontFamily: 'GSC',
     fontSize: '42px',
