@@ -277,7 +277,7 @@ function create() {
     showSetupUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.6.2", {
+  const version = this.add.text(20, 1140, "v0.7.0", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -1358,7 +1358,7 @@ function getPatternsForPhase(patterns, phase) {
 }
 
 let phaseNum = 0;
-const patternPhase = [ 'basic1', 'basic2', 'basic2', 'intermediate1', 'intermediate1', 'test']
+const patternPhase = [ 'basic1', 'basic2', 'basic2', 'intermediate1', 'intermediate1', 'intermediate2', 'intermediate2', 'advanced', 'advanced', 'boss']
 
 
 
