@@ -1,0 +1,95 @@
+# Pattern: basic1
+phase: basic1
+duration: 24
+0 basicShoot 0.3
+7 octoBurst
+12 lineBurst 8
+14 octoBurst
+21 octoBurst
+24 lineBurst 9
+
+# Pattern: basic2
+phase: basic1
+duration: 24
+0 basicShoot 0.3
+4 octoBurst
+8 octoBurst
+12 octoBurst
+16 octoBurst
+20 octoBurst
+24 octoBurst
+
+# Pattern: basic3
+phase: basic1
+duration: 24
+0 basicShoot 0.3
+6 lineBurst 7
+12 lineBurst 8
+18 lineBurst 9
+24 lineBurst 10
+
+# Pattern: basic4
+phase: basic1
+duration: 24
+0 basicShoot 0.15
+
+# Pattern: basic5
+phase: basic2
+duration: 12
+0 basicShoot 0.3
+6 octoBurst
+12 lineBurst 10
+
+# Pattern: basic6
+phase: basic2
+duration: 12
+0 basicShoot 0.3
+3 octoBurst
+6 octoBurst
+9 octoBurst
+12 octoBurst
+
+# Pattern: basic7
+phase: basic2
+duration: 12
+0 basicShoot 0.3
+6 lineBurst 10
+12 octoBurst
+
+# Pattern: basic8
+phase: basic2
+duration: 12
+0 basicShoot 0.1
+
+# Pattern: intermediate1
+phase: intermediate1
+duration: 12
+0 basicShoot 0.3
+6 octoBurst superball
+12 lineBurst 10
+
+# Pattern: intermediate2
+phase: intermediate1
+duration: 12
+0 basicShoot 0.3
+3 octoBurst
+6 octoBurst superball
+9 octoBurst 
+12 octoBurst superball
+
+# Pattern: intermediate3
+phase: intermediate1
+duration: 12
+0 basicShoot 0.3
+6 lineBurst 10
+12 octoBurst superball
+
+# Pattern: intermediate4
+phase: intermediate1
+duration: 12
+0 basicShoot 0.3 superball
+
+# Pattern: TEST
+phase: test
+duration: 60
+0 basicShoot 0.1 hyperball

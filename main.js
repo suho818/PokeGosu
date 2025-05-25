@@ -40,7 +40,7 @@ const config = {
 };
 
 let scene, player, cursors, timerText, startTime, startUI, username, ssid,
-stat,
+stat, allPatterns,
 wallet = {'monsterball' : 0, 'superball' : 0, 'hyperball': 0, 'masterball' : 0},
 avoid_num = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
 avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball': 0},
@@ -75,7 +75,7 @@ function create() {
 
   bgm = this.sound.add(bgmList[currentBgmIndex], {
   loop: true,
-  volume: 0.2
+  volume: 0.15
 });
   bgm.play();
 
@@ -112,7 +112,7 @@ function create() {
   })
   this.anims.create({
     key: 'celebi',
-    frames: this.anims.generateFrameNumbers('celebi', { start: 0, end: 98 }),
+    frames: this.anims.generateFrameNumbers('celebi', { start: 0, end: 77 }),
     frameRate: 24,
     repeat: -1
   })
@@ -203,8 +203,14 @@ function create() {
       this.time.delayedCall(600, () => 
       {
         startUI.setVisible(true);
-        
-        patternManager(patternList, this);
+        let patternsForPhase = getPatternsForPhase(allPatterns, patternPhase[phaseNum]);
+        phaseNum++;
+        const keys = Object.keys(patternsForPhase);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)]
+        const pattern = patternsForPhase[randomKey];
+        schedulePattern(this, pattern);
+          
+        //patternManager(patternList, this);
       })
     })
 
@@ -301,7 +307,7 @@ function create() {
       timer.remove()
     );
     patternEvents = [];
-    
+    phaseNum = 0;
     if (navigator.vibrate) {
       navigator.vibrate(30); // 눌렀을 때 짧게 진동
     }
@@ -495,7 +501,13 @@ function createSetupUI(scene) {
   })
 
   // 🎚 배경음악 슬라이더
-  const bgmVolumeText = scene.add.text(-240, -100, `음악`, {
+  const bgmText = scene.add.text(-240, -100, `음악`, {
+    fontFamily: 'GSC',
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+  bgm.setVolume(0.15);
+  const bgmVolumeText = scene.add.text(240, -100, `${(bgm.volume*100).toFixed(0)}`, {
     fontFamily: 'GSC',
     fontSize: '42px',
     color: '#ffffff'
@@ -519,12 +531,19 @@ function createSetupUI(scene) {
     input: 'drag',
     valuechangeCallback: function (value) {
       bgm.setVolume(value/2);
+      bgmVolumeText.setText(`${(value*100).toFixed(0)}`)
     },
     
   }).layout();
 
   // 🎚 배경음악 슬라이더
-  const soundVolumeText = scene.add.text(-240, -200, `효과음`, {
+  const soundText = scene.add.text(-240, -200, `효과음`, {
+    fontFamily: 'GSC',
+    fontSize: '42px',
+    color: '#ffffff'
+  }).setOrigin(0.5);
+
+  const soundVolumeText = scene.add.text(-240, -100, `음악`, {
     fontFamily: 'GSC',
     fontSize: '42px',
     color: '#ffffff'
@@ -553,7 +572,7 @@ function createSetupUI(scene) {
   }).layout();
 
   // 🎶 배경음악 변경
-  const bgmNameText = scene.add.text(0, 0, `${bgmList[currentBgmIndex]}`, {
+  const bgmNameText = scene.add.text(0, 0, `♫${bgmList[currentBgmIndex]}`, {
     fontFamily: 'GSC',
     fontSize: '42px',
     color: '#ffffff'
@@ -564,7 +583,7 @@ function createSetupUI(scene) {
     color: '#ffffff'
   }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
     changeBgm(-1);
-    bgmNameText.setText(`${bgmList[currentBgmIndex]}`);
+    bgmNameText.setText(`♫${bgmList[currentBgmIndex]}`);
   });
 
   const bgmNext = scene.add.text(20, 80, '▶', {
@@ -572,14 +591,15 @@ function createSetupUI(scene) {
     color: '#ffffff'
   }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
     changeBgm(1);
-    bgmNameText.setText(`${bgmList[currentBgmIndex]}`);
+    bgmNameText.setText(`♫${bgmList[currentBgmIndex]}`);
   });
 
   // 🔁 반복 재생 ON/OFF 버튼
   let isLooping = bgm.loop;
   const loopBtn = scene.add.text(0, 140, `반복 재생: ${isLooping ? 'ON' : 'OFF'}`, {
     fontSize: '42px',
-    color: '#ffffff'
+    color: '#ffffff',
+    fontFamily: 'GSC'
   }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
     isLooping = !isLooping;
     bgm.setLoop(isLooping);
@@ -588,7 +608,8 @@ function createSetupUI(scene) {
 
   
 
-  setupUI.add([bg, title, bgmVolumeText, soundVolumeText, slider1, slider2, bgmNameText, bgmPrev, bgmNext, cancelBtn, loopBtn]);
+  setupUI.add([bg, title, bgmVolumeText, soundVolumeText, bgmText, soundText,
+    slider1, slider2, bgmNameText, bgmPrev, bgmNext, cancelBtn, loopBtn]);
 }
 
 function changeBgm(delta) {
@@ -707,7 +728,11 @@ function showSetupUI(scene) {
     {
       
       isGameStarted = true;
-      patternManager(patternList, scene);
+      let patternsForPhase = getPatternsForPhase(allPatterns, patternPhase[phaseNum])
+      const keys = Object.keys(patternsForPhase);
+      const randomKey = keys[Math.floor(Math.random() * keys.length)]
+      const pattern = patternsForPhase[randomKey];
+      schedulePattern(scene, pattern);
     })
     });
 
@@ -836,7 +861,7 @@ function showSetupUI(scene) {
     }
   }
 
-  
+
 }
 
 function setPichuAnimationSpeed(player, targetFrameRate) {
@@ -1236,10 +1261,10 @@ function patternManager(patternList, scene)
     },
     
   }
-
+}
   
 
-  for (const pattern of patternList) {
+  /* for (const pattern of patternList) {
     const [patternName, triggerTime, ...args] = pattern;
     if (patterns[patternName]) {
       const t1 = scene.time.delayedCall(triggerTime*1000, () => {patterns[patternName](...args)});
@@ -1254,6 +1279,88 @@ function patternManager(patternList, scene)
   }));
 
 }
+  */
+
+function parsePatternFile(text) {
+  const patterns = {};
+  const lines = text.split('\n');
+
+  let currentPattern = null;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    if (line.startsWith('# Pattern:')) {
+      currentPattern = line.split(':')[1].trim();
+      patterns[currentPattern] = {duration: 0, events: [] };
+    } else if (line.startsWith('phase:')) {
+      const phases = line.split(':')[1].trim().split(' ');
+      patterns[currentPattern].phase = phases;
+      console.log(patterns[currentPattern].phase)
+    } else if (line.startsWith('duration:')) {
+      patterns[currentPattern].duration = parseFloat(line.split(':')[1]);
+    } else if (currentPattern) {
+      const [time, type, ...args] = line.split(' ');
+      patterns[currentPattern].events.push({
+        time: parseFloat(time),
+        type,
+        args: args.map(v => isNaN(v) ? v : Number(v))
+      });
+    }
+  }
+  return patterns;
+}
+
+function schedulePattern(scene, pattern) {
+  // 기존  basicShoot 제거
+  if (scene.basicShootEvent) {
+    scene.basicShootEvent.remove();
+    scene.basicShootEvent = null;
+  }
+  console.log(pattern);
+  pattern.events.forEach(evt => {
+    if (evt.type === 'basicShoot') {
+      // evt.args[0]이 간격
+      scene.basicShootEvent = scene.time.addEvent({
+        delay: evt.args[0] * 1000,
+        loop: true,
+        callback: () => spawnBasicShooter(evt?.args[1])
+      });
+      patternEvents.push(scene.basicShootEvent)
+    } else {
+      
+      patternEvents.push(
+        
+        scene.time.delayedCall(evt.time * 1000,  () => {
+        if (evt.type === 'lineBurst') spawnLineBurst(...evt.args);
+        else if (evt.type === 'octoBurst') spawnOctoBurst(...evt.args);
+      })
+    );
+    }
+  });
+  const t1 = scene.time.delayedCall(pattern.duration * 1000, () => {
+    phaseNum++;
+    let patternsForPhase = getPatternsForPhase(allPatterns, patternPhase[phaseNum]);
+    const keys = Object.keys(patternsForPhase);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)]
+    const pattern = patternsForPhase[randomKey];
+    schedulePattern(scene, pattern);    
+  }
+  )
+  patternEvents.push(t1);
+}
+
+function getPatternsForPhase(patterns, phase) {
+  return Object.entries(patterns)
+  .filter(([name, pattern]) => pattern.phase.includes(phase))
+  .map(([name, pattern]) => ({name, ...pattern}))
+}
+
+let phaseNum = 0;
+const patternPhase = [ 'basic1', 'basic2', 'basic2', 'intermediate1', 'intermediate1', 'test']
+
+
 
 const patternList = [ 
     ['lineBurst', 12, 5],['lineBurst', 24, 6], ['lineBurst', 36, 7],
@@ -1929,6 +2036,14 @@ document.fonts.ready.then(() => {
   game = new Phaser.Game(config);
   //setupDpad();
   setupDynamicJoystick();
+  fetch('pattern.txt')
+.then(res => res.text())
+.then(text => {
+  allPatterns = parsePatternFile(text)
+
+  
+
+})
   
 });
 
