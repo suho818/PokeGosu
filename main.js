@@ -83,7 +83,7 @@ function create() {
   for (let dir = 0; dir < 8; dir++) {
   scene.anims.create({
     key: `walk_${dir}`,
-    frames: scene.anims.generateFrameNumbers('pichu', {
+    frames: scene.anims.generateFrameNumbers('pichu_w', {
       start: dir * 8,
       end: dir * 8 + 7
     }),
@@ -91,36 +91,18 @@ function create() {
     repeat: -1
   });
 }
-  this.anims.create({
-    key: 'torchic',
-    frames: this.anims.generateFrameNumbers('torchic', { start: 0, end: 60 }),
-    frameRate: 24,
+  
+  scene.anims.create({
+    key: `idle_0`,
+    frames: scene.anims.generateFrameNumbers('pichu_i', {
+      start: 0,
+      end: 31
+    }),
+    frameRate: 10,
     repeat: -1
-  })  
-  this.anims.create({
-    key: 'eevee',
-    frames: this.anims.generateFrameNumbers('eevee', { start: 0, end: 24 }),
-    frameRate: 24,
-    repeat: -1
-  })
-  this.anims.create({
-    key: 'pachirisu',
-    frames: this.anims.generateFrameNumbers('pachirisu', { start: 0, end: 48 }),
-    frameRate: 24,
-    repeat: -1
-  })
-  this.anims.create({
-    key: 'emolga',
-    frames: this.anims.generateFrameNumbers('emolga', { start: 0, end: 98 }),
-    frameRate: 24,
-    repeat: -1
-  })
-  this.anims.create({
-    key: 'celebi',
-    frames: this.anims.generateFrameNumbers('celebi', { start: 0, end: 77 }),
-    frameRate: 24,
-    repeat: -1
-  })
+  });
+
+  
   
 
   player = this.physics.add.sprite(600, 600, 'pichu');
@@ -721,7 +703,7 @@ function showSetupUI(scene) {
       gameOverUI.setVisible(false);
       windowManager = 'nothing';
       gameOverUI.scale = 0;
-      player.scale = 1;
+      player.scale = 2.5;
       player.angle = 0;
       player.setPosition(600, 600);
       player.setVelocity(0, 0);  
@@ -784,7 +766,7 @@ function showSetupUI(scene) {
       windowManager = 'nothing';
       gameOverUI.setVisible(false);
       gameOverUI.scale = 0;
-      player.scale = 1;
+      player.scale = 2.5;
       player.angle = 0;
       editIcon.setVisible(true);
       setupIcon.setVisible(true);
@@ -1161,16 +1143,24 @@ function movePlayer(scene) {
   return Math.floor(adjusted / 45); // 0~7
 }
 function updatePlayerAnim(player, vx, vy) {
+  
   if (vx === 0 && vy === 0) {
+    if (player.lastDirIndex !== undefined) {
+      
+    player.setFrame(player.lastDirIndex*8);
     player.anims.stop();
     return;
+    }
   }
 
   const dirIndex = getDirectionIndex(vx, vy);
+  player.lastDirIndex = dirIndex;
+  console.log(player.lastDirIndex);
   const animKey = `walk_${dirIndex}`;
-  if (player.anims.currentAnim?.key !== animKey) {
+
+  
     player.anims.play(animKey, true);
-  }
+  
 }
 updatePlayerAnim(player, vx, vy);
 
@@ -1532,7 +1522,8 @@ function createPokemonUI(scene) {
   const infoBG = scene.add.rectangle(0, 50, 1000, 500, 0xffffff).setStrokeStyle(4, 0x000);
   const infoPokemonBoxBG = scene.add.rectangle(0, 25, 150, 150).setStrokeStyle(2, 0x000);
   const infoText = scene.add.text(0, -150, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0.5);
-  const infoImage = scene.add.image(0, 25, 'pichu').setScale(2.2);
+  const infoImage = scene.add.sprite(0, 25, 'pichu_i').setScale(2.2);
+  infoImage.anims.play('idle_0');
   const actionButton = scene.add.text(0, 220, '선택됨', { fontSize: '48px',  fontFamily: 'GSC', backgroundColor: '#333', color: '#fff', padding: 10 })
     .setInteractive().setOrigin(0.5);
 

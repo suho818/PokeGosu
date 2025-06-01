@@ -1,22 +1,20 @@
 const pokemonList = [
-  { name: 'celebi', width: 67, height: 65 },
+  { name: 'celebi', width: 24, height: 48 },
   { name: 'charizard', width: 133, height: 140 },
-  { name: 'darkrai', width: 124, height: 116 },
+  { name: 'darkrai', width: 40, height: 80 },
   { name: 'darumaka', width: 74, height: 61 },
-  { name: 'eevee', width: 64, height: 55 },
-  { name: 'emolga', width: 66, height: 59 },  
-  { name: 'ho-oh', width: 157, height: 144 },
-  { name: 'mew', width: 40, height: 51 },
+  { name: 'eevee', width: 40, height: 48 },
+  { name: 'emolga', width: 32, height: 32 },  
+  { name: 'ho-oh', width: 72, height: 112 },
+  { name: 'mew', width: 40, height: 64 },
   { name: 'mimikyu', width: 72, height: 92 },
   { name: 'mimikyu-busted', width: 85, height: 51 },
-  { name: 'pachirisu', width: 57, height: 75 },
+  { name: 'pachirisu', width: 40, height: 56 },
   { name: 'pichu', width: 32, height: 48 },
-  { name: 'pikachu', width: 77, height: 60 },
-  { name: 'pikachu-kaloscap', width: 60, height: 60 },
-  { name: 'pikachu-kantocap', width: 60, height: 60 },
-  { name: 'piplup', width: 54, height: 59 },
-  { name: 'porygon', width: 47, height: 53 },  
-  { name: 'torchic', width: 33, height: 61 },
+  { name: 'pikachu', width: 32, height: 40 },
+  { name: 'piplup', width: 24, height: 32 },
+  { name: 'porygon', width: 32, height: 40 },  
+  { name: 'torchic', width: 24, height: 32 },
   { name: 'victini', width: 53, height: 73 },  
 ];
 
@@ -33,7 +31,11 @@ export function preloadAssets(scene) {
   pokemonList.forEach(pokemon => {
   
   scene.load.image(`${pokemon.name}-icon`, `image/ingame/pokemon-icon/${pokemon.name}.png`);
-  scene.load.spritesheet(pokemon.name, `image/ingame/pokemon-spritesheet/${pokemon.name}-spritesheet2.png`, {
+  scene.load.spritesheet(`${pokemon.name}_w`, `image/ingame/pokemon-spritesheet/walk/${pokemon.name}-walk-spritesheet.png`, {
+    frameWidth: pokemon.width,
+    frameHeight: pokemon.height,
+  });
+  scene.load.spritesheet(`${pokemon.name}_i`, `image/ingame/pokemon-spritesheet/idle/${pokemon.name}-idle-spritesheet.png`, {
     frameWidth: pokemon.width,
     frameHeight: pokemon.height,
   });
