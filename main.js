@@ -24,7 +24,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false
+      debug: true
     }
   },
   scene: {
@@ -47,7 +47,7 @@ avoid_num_now = {'monsterball': 0, 'superball': 0, 'hyperball': 0, 'masterball':
 distance = 0, pokedex = 172,
 isGameStarted, isGameOver, windowManager, rankingState = 0, 
 gameOverUI, gameOverScoreText, gameOverHighScoreText, gameSummaryText,
-rankingUI, pokemonUI,
+rankingUI, pokemonUI, renderPokemonInfoNow,
 monsterball_text, superball_text, hyperball_text, masterball_text,
 nicknameEditUI, inputDOM, setupUI, bgmList, bgm, currentBgmIndex;
 let obstacles;
@@ -75,17 +75,22 @@ function create() {
 
   bgm = this.sound.add(bgmList[currentBgmIndex], {
   loop: true,
-  volume: 0.15
+  volume: 0.0
 });
   bgm.play();
 
   this.scale.setGameSize(1200,1200);
-  this.anims.create({
-    key: 'pichu',
-    frames: this.anims.generateFrameNumbers('pichu', { start: 0, end: 46 }),
-    frameRate: 24,
+  for (let dir = 0; dir < 8; dir++) {
+  scene.anims.create({
+    key: `walk_${dir}`,
+    frames: scene.anims.generateFrameNumbers('pichu', {
+      start: dir * 8,
+      end: dir * 8 + 7
+    }),
+    frameRate: 10,
     repeat: -1
-  })
+  });
+}
   this.anims.create({
     key: 'torchic',
     frames: this.anims.generateFrameNumbers('torchic', { start: 0, end: 60 }),
@@ -120,9 +125,10 @@ function create() {
 
   player = this.physics.add.sprite(600, 600, 'pichu');
   player.anims.play('pichu');
-  player.setScale(1);
-  player.setSize(22, 35);
-  player.setOffset(14,16);
+  player.setScale(2.5);
+  player.setSize(12, 16);
+  player.setFlipX(true);
+  player.setOffset(10,12);
   player.setCollideWorldBounds(true);
 
   cursors = this.input.keyboard.createCursorKeys();
@@ -506,7 +512,7 @@ function createSetupUI(scene) {
     fontSize: '42px',
     color: '#ffffff'
   }).setOrigin(0.5);
-  bgm.setVolume(0.15);
+  bgm.setVolume(0.0);
   console.log(`현재 볼륨은${(bgm.volume).toFixed(2)}입니다.}`)
   const bgmVolumeText = scene.add.text(240, -100, `${(bgm.volume*100).toFixed(0)}`, {
     fontFamily: 'GSC',
@@ -1135,22 +1141,39 @@ function movePlayer(scene) {
   }
 
   // 좌우 반전 방향 처리
-  if (vx < 0 && scene.lastDir !== 'left') {
+  /*if (vx < 0 && scene.lastDir !== 'left') {
     player.setFlipX(false);
     scene.lastDir = 'left';
   } else if (vx > 0 && scene.lastDir !== 'right') {
     player.setFlipX(true);
     scene.lastDir = 'right';
   }
-
+*/
   player.setVelocity(vx, vy);
 
-  // 애니메이션 속도 조절
-  if (player.body.velocity.length() > 5) {
-    setPichuAnimationSpeed(player, 48);
-  } else {
-    //setPichuAnimationSpeed(player, 24);
+
+  function getDirectionIndex(vx, vy) {
+  const angle = Math.atan2(vy, vx); // -PI ~ PI
+  const deg = Phaser.Math.RadToDeg(angle); // -180 ~ 180
+
+  // 8방향 나누기 (각 방향은 45도 간격)
+  const adjusted = (deg + 630 + 22.5) % 360; // 0~360, 중심 맞추기
+  return Math.floor(adjusted / 45); // 0~7
+}
+function updatePlayerAnim(player, vx, vy) {
+  if (vx === 0 && vy === 0) {
+    player.anims.stop();
+    return;
   }
+
+  const dirIndex = getDirectionIndex(vx, vy);
+  const animKey = `walk_${dirIndex}`;
+  if (player.anims.currentAnim?.key !== animKey) {
+    player.anims.play(animKey, true);
+  }
+}
+updatePlayerAnim(player, vx, vy);
+
 }
 
 
@@ -1403,22 +1426,40 @@ function updateWalletWithAvoids(avoid_num) {
 }
 
 
-const pokemonList = [
-  { id: 'pichu', name: '피츄', unlocked: true, image: 'pichu', condition: null , price: null , pokedex: 172 },
-  { id: 'piplup', name: '팽도리', unlocked: false, image: 'piplup', condition: {best: 150} , price: { monsterball: 10000 }, pokedex: 393 },
-  { id: 'torchic', name: '아차모', unlocked: false, image: 'torchic', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'pachirisu', name: '파치리스', unlocked: false, image: 'pachirisu', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255, frame: 15},
-  { id: 'pikachu', name: '피카츄', unlocked: false, image: 'pikachu', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'mew', name: '뮤', unlocked: false, image: 'mew', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'porygon', name: '폴리곤', unlocked: false, image: 'porygon', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
-  { id: 'victini', name: '비크티니', unlocked: false, image: 'victini', condition: { best : 300 } , price: { monsterball: 5000, superball: 100 }, pokedex: 255},
+let pokemonList = [];
+let unlockedPokemon = JSON.parse('["pichu"]'); //localStorage.getItem('unlockedPokemon') || 
 
-  // ...7마리 더 추가
-];
 
-let unlockedPokemon = JSON.parse(localStorage.getItem('unlockedPokemon') || '["pichu"]');
-let ownedPokemon = JSON.parse(localStorage.getItem('ownedPokemon') || '["pichu"]');
-let selectedPokemon = localStorage.getItem('selectedPokemon') || 'pichu';
+async function loadPokemonList(unlockedPokemon = []) {
+  try {
+    const res = await fetch('pokemon.json'); // 경로는 프로젝트 구조에 따라 조정
+    const data = await res.json();
+
+    // unlocked 여부 설정
+    const list = data.map(pokemon => ({
+      ...pokemon,
+      unlocked: unlockedPokemon.includes(pokemon.id),
+      owned: ownedPokemon.includes(pokemon.id),
+    }));
+    return list; // pokemonList가 이 값을 참조하게 되면 됨
+  } catch (err) {
+    console.error('포켓몬 불러오기 오류:', err);
+    return [];
+  }
+}
+
+
+loadPokemonList(unlockedPokemon).then(list => {
+  pokemonList = list;
+
+  // 이후 코드에서 pokemonList 사용 가능
+  console.log('포켓몬 리스트 불러오기 완료:', pokemonList);
+});
+
+
+let ownedPokemon = JSON.parse('["pichu"]'); //localStorage.getItem('ownedPokemon') || 
+let selectedPokemon = 'pichu'; //localStorage.getItem('selectedPokemon') || 
+
 
 
 function createPokemonUI(scene) {
@@ -1474,8 +1515,17 @@ function createPokemonUI(scene) {
     hyperball_text,
     masterball_text
   };
+  const Drawbtn1 = scene.add.text(420,450,'뽑기1', {
+    fontFamily: 'GSC',
+    fontSize: '54px',
+    color: '#000000',
+  }).setOrigin(0.5).setInteractive()
+  .on('pointerdown', () => {
+    drawPokemon('basic');
+  });
   ui.add([bg, BackBtn, monsterball_img, superball_img, hyperball_img, masterball_img,
   monsterball_text, superball_text, hyperball_text, masterball_text
+  ,Drawbtn1
   ]);
   // 상단 포켓몬 정보 박스
   const infoBox = scene.add.container(0, -300);
@@ -1491,6 +1541,8 @@ function createPokemonUI(scene) {
   // 하단 포켓몬 박스 (5x2)
   const boxContainer = scene.add.container(0, 150);
   const cols = 5, rows = 2, spacing = 180;
+  scene.pokeimage = {}
+  scene.pokelock = {}
   pokemonList.forEach((poke, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
@@ -1498,10 +1550,12 @@ function createPokemonUI(scene) {
     const y = row * spacing;
 
     const boxBG = scene.add.rectangle(x, y, 150, 150, 0xffffff).setStrokeStyle(2, 0x000);
-    const image = scene.add.image(x, y, poke.image,poke.frame || 1).setScale(1);
-
+    const image = scene.add.image(x, y-20, `${poke.id}-icon`).setScale(3);
+    
+    scene.pokeimage[poke.id] = image;
     if (!unlockedPokemon.includes(poke.id)) {
       const lock = scene.add.text(x, y, '?', { fontSize: '42px', color:'#ffffff' }).setOrigin(0.5);
+      scene.pokelock[poke.id] = lock;
       image.setTint(0x000000);
       boxContainer.add([boxBG, image, lock]);
     } else {
@@ -1509,14 +1563,15 @@ function createPokemonUI(scene) {
     }
 
     boxBG.setInteractive().on('pointerdown', () => {
-      renderPokemonInfo(poke);
+      renderPokemonInfo(poke);      
     });
   });
 
   // 포켓몬 정보 갱신 함수
   function renderPokemonInfo(poke) {
+    renderPokemonInfoNow = poke;
     infoText.setText(poke.name);
-    infoImage.setTexture(poke.image, poke.frame || 1);
+    infoImage.setTexture(poke.id, poke.frame || 1);
     if (unlockedPokemon.includes(poke.id)) {
       infoImage.clearTint();
 
@@ -1540,8 +1595,10 @@ function createPokemonUI(scene) {
     } else {
       infoText.setText('???');
       infoImage.setTint(0x000000);
+      if(poke.condition) {
       const conditionText = Object.entries(poke.condition).map(([k, v]) => `${v}초 이상 생존시`).join(', ');
-      actionButton.setText(`${conditionText} 잠금해제`);
+        actionButton.setText(`${conditionText} 잠금해제`);
+    }      
       actionButton.removeAllListeners();
       actionButton.setInteractive().on('pointerdown', () => {
         if (canUnlock(poke.condition)) {
@@ -1580,6 +1637,109 @@ function createPokemonUI(scene) {
   }
 }
 
+const drawRates = {
+  basic: [
+    { type: 'common', rate: 0.9 },
+    { type: 'starting', rate: 0.09 },
+    { type: 'special', rate: 0.01 },
+  ],
+  super: [
+    { type: '스타팅', rate: 0.9 },
+    { type: '스페셜', rate: 0.09 },
+    { type: '전설', rate: 0.01 },
+  ],
+  hyper: [
+    { type: '스페셜', rate: 0.9 },
+    { type: '전설', rate: 0.1 },
+  ],
+  legend: [
+    { type: '전설', rate: 1.0 },
+  ]
+};
+
+
+function drawPokemon(drawType) {
+  const itemMap = {
+    basic: 'monsterball',
+    super: 'monsterball',
+    hyper: 'monsterball',
+    legend: 'monsterball'
+  };
+
+  const cost = {
+    basic: 1,
+    super: 1,
+    hyper: 1,
+    legend: 1
+  };
+  console.log(drawType);
+  const item = itemMap[drawType];
+  if (wallet[item] < cost[drawType]) {
+    console.log('볼이 부족합니다!');
+    return { success: false, message: '볼이 부족합니다!' };
+  }
+
+  const rates = drawRates[drawType];
+  let random = Math.random();
+  let chosenType = null;
+
+  for (let i = 0; i < rates.length; i++) {
+    if (random < rates[i].rate) {
+      chosenType = rates[i].type;
+      break;
+    }
+    random -= rates[i].rate;
+  }
+
+  const candidates = pokemonList.filter(p =>
+    p.grade === chosenType
+  );
+
+  if (candidates.length === 0) {
+    console.log('더 이상 뽑을 수 있는 포켓몬이 없습니다.!');
+    return { success: false, message: '더 이상 뽑을 수 있는 포켓몬이 없습니다.' };
+  }
+
+  const chosen = Phaser.Math.RND.pick(candidates);
+  
+  if (!unlockedPokemon.includes(chosen.id)) {
+    unlockedPokemon.push(chosen.id);
+    localStorage.setItem('unlockedPokemon', JSON.stringify(unlockedPokemon));
+  }
+
+  if (!ownedPokemon.includes(chosen.id)) {
+    ownedPokemon.push(chosen.id);
+    localStorage.setItem('ownedPokemon', JSON.stringify(ownedPokemon));
+  }
+
+  else{
+    console.log(`${chosen.name} 중복 발생!`)
+  }
+
+  // pokemonList 내에도 반영 (선택사항)
+  const poke = pokemonList.find(p => p.id === chosen.id);
+  if (poke) {
+    poke.unlocked = true;
+    poke.owned = true;
+  }
+  
+  wallet[item] -= cost[drawType];
+  updateWallet(scene);
+  console.log(renderPokemonInfoNow);
+  if (renderPokemonInfoNow)
+  {
+      renderPokemonInfo(renderPokemonInfoNow);
+  }
+  scene.pokeimage[chosen.id]?.clearTint();
+  scene.pokelock[chosen.id]?.destroy();
+  console.log(chosen);  
+  return {
+    success: true,
+    result: chosen,
+    type: chosenType
+  };
+}
+
   ui.add([infoBox, boxContainer]);
   pokemonUI = ui;
 }
@@ -1590,11 +1750,14 @@ function showPokemonUI(scene) {
   pokemonUI.setVisible(true);
 }
 
+
+
 function updateWallet(scene) {
   scene.pokemonUI_prop.monsterball_text.setText(`X${wallet['monsterball']}`);
   scene.pokemonUI_prop.superball_text.setText(`X${wallet['superball']}`);
   scene.pokemonUI_prop.hyperball_text.setText(`X${wallet['hyperball']}`);
   scene.pokemonUI_prop.masterball_text.setText(`X${wallet['masterball']}`);
+  localStorage.setItem('wallet', JSON.stringify(wallet));
 }
 
 function initializeStat() {

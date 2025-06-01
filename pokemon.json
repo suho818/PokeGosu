@@ -1,0 +1,13 @@
+[
+  { "id": "pikachu", "name": "피카츄", "pokedex": 25, "grade": "event", "prev": "pichu"},
+  { "id": "porygon", "name": "폴리곤", "pokedex" : 137, "grade": "common"},
+  { "id": "mew", "name": "뮤", "pokedex" : 151, "grade": "fantasy"},
+  { "id": "pichu", "name": "피츄", "pokedex": 172, "grade": "event"},
+  { "id": "ho-oh","name": "칠색조", "pokedex": 250, "grade": "legend"},
+  { "id": "torchic","name": "아차모", "pokedex": 255, "grade": "starting"},
+  { "id": "piplup", "name": "팽도리", "pokedex": 393, "grade": "starting"},
+  { "id": "pachirisu", "name": "파치리스", "pokedex": 417, "grade": "common", "frame": 15},
+  { "id": "darkrai", "name": "다크라이", "pokedex": 491, "grade": "fantasy"},
+  { "id": "victini", "name": "비크티니", "pokedex" : 494, "grade": "fantasy"},
+  { "id": "mimikyu", "name": "따라큐", "pokedex" : 778, "grade": "special"}
+]

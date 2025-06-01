@@ -10,7 +10,7 @@ const pokemonList = [
   { name: 'mimikyu', width: 72, height: 92 },
   { name: 'mimikyu-busted', width: 85, height: 51 },
   { name: 'pachirisu', width: 57, height: 75 },
-  { name: 'pichu', width: 51, height: 52 },
+  { name: 'pichu', width: 32, height: 48 },
   { name: 'pikachu', width: 77, height: 60 },
   { name: 'pikachu-kaloscap', width: 60, height: 60 },
   { name: 'pikachu-kantocap', width: 60, height: 60 },
@@ -31,7 +31,9 @@ export function preloadAssets(scene) {
   scene.load.image('editicon', 'image/editicon.png');
   scene.load.image('setupicon', 'image/setupicon.png');
   pokemonList.forEach(pokemon => {
-  scene.load.spritesheet(pokemon.name, `image/ingame/pokemon-spritesheet/${pokemon.name}-spritesheet.png`, {
+  
+  scene.load.image(`${pokemon.name}-icon`, `image/ingame/pokemon-icon/${pokemon.name}.png`);
+  scene.load.spritesheet(pokemon.name, `image/ingame/pokemon-spritesheet/${pokemon.name}-spritesheet2.png`, {
     frameWidth: pokemon.width,
     frameHeight: pokemon.height,
   });
