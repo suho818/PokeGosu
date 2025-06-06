@@ -14,7 +14,7 @@ const pokemonList = [
   { name: 'pikachu', width: 32, height: 40 },
   { name: 'piplup', width: 24, height: 32 },
   { name: 'porygon', width: 32, height: 40 },  
-  { name: 'torchic', width: 24, height: 32 },
+  { name: 'torchic', width: 24, height_w: 32 ,height_i:40},
   { name: 'victini', width: 53, height: 73 },  
 ];
 
@@ -33,11 +33,11 @@ export function preloadAssets(scene) {
   scene.load.image(`${pokemon.name}-icon`, `image/ingame/pokemon-icon/${pokemon.name}.png`);
   scene.load.spritesheet(`${pokemon.name}_w`, `image/ingame/pokemon-spritesheet/walk/${pokemon.name}-walk-spritesheet.png`, {
     frameWidth: pokemon.width,
-    frameHeight: pokemon.height,
+    frameHeight: pokemon.height || pokemon.height_w,
   });
   scene.load.spritesheet(`${pokemon.name}_i`, `image/ingame/pokemon-spritesheet/idle/${pokemon.name}-idle-spritesheet.png`, {
     frameWidth: pokemon.width,
-    frameHeight: pokemon.height,
+    frameHeight: pokemon.height || pokemon.height_i,
   });
 });
   scene.load.image('monster-ball', 'image/monster-ball.png');
