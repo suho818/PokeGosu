@@ -1495,14 +1495,14 @@ function createPokemonUI(scene) {
   ,Drawbtn1
   ]);
   // 상단 포켓몬 정보 박스
-  const infoBox = scene.add.container(-340, -250);
-  const infoBG = scene.add.rectangle(0, 0, 440, 500, 0xffffff).setStrokeStyle(4, 0x000);
-  const infoPokemonBoxBG = scene.add.rectangle(0, 0, 150, 150).setStrokeStyle(2, 0x000);
-  const infoNum = scene.add.text(-200, -220, 'No.0025', { fontSize: '32px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
-  const infoGrade = scene.add.text(200, -220, 'EVENT', { fontSize: '32px', color: '#000', fontFamily: 'GSC' }).setOrigin(1,0.5);
+  const infoBox = scene.add.container(-360, -250);
+  const infoBG = scene.add.rectangle(0, 100, 400, 700, 0xffffff).setStrokeStyle(4, 0x000);
+  const infoPokemonBoxBG = scene.add.rectangle(0, -50, 200, 200);
+  const infoNum = scene.add.text(-190, -220, 'No.0025', { fontSize: '24px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
+  const infoGrade = scene.add.text(190, -220, 'EVENT', { fontSize: '24px', color: '#000', fontFamily: 'GSC' }).setOrigin(1,0.5);
   
-  const infoText = scene.add.text(-200, 150, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
-  const infoImage = scene.add.sprite(0, 35, 'pichu_i').setScale(2.2);
+  const infoText = scene.add.text(-190, 90, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
+  const infoImage = scene.add.sprite(0, -15, 'pichu_i').setScale(5);
   infoImage.anims.play('pichu_idle');
   const actionButton = scene.add.text(0, 220, '선택됨', { fontSize: '48px',  fontFamily: 'GSC', backgroundColor: '#333', color: '#fff', padding: 10 })
     .setInteractive().setOrigin(0.5);
@@ -1542,9 +1542,14 @@ function createPokemonUI(scene) {
   function renderPokemonInfo(poke) {
     renderPokemonInfoNow = poke;
     infoText.setText(poke.name);
+    infoGrade.setText(poke.grade.toUpperCase());
+    infoNum.setText(`No.${poke.pokedex.toString().padStart(4,"0")}`);
     infoImage.stop();
     infoImage.setTexture(`${poke.id}_i`, poke.frame || 1);
     
+
+
+
     if (unlockedPokemon.includes(poke.id)) {
       infoImage.clearTint();
 
