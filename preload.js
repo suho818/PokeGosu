@@ -1,21 +1,23 @@
 const pokemonList = [
-  { name: 'celebi', width: 24, height: 48 },
+  { name: 'celebi', width: 24, height_w: 48, height_i:56 },
   { name: 'charizard', width: 133, height: 140 },
-  { name: 'darkrai', width: 40, height: 80 },
+  { name: 'darkrai', width: 40, height: 80  },
   { name: 'darumaka', width: 74, height: 61 },
   { name: 'eevee', width: 40, height: 48 },
-  { name: 'emolga', width: 32, height: 32 },  
+  { name: 'emolga', width: 32, height_w: 32, height_i:48 },  
+  { name: 'empoleon', width: 32, height: 56 },
   { name: 'ho-oh', width: 72, height: 112 },
-  { name: 'mew', width: 40, height: 64 },
-  { name: 'mimikyu', width: 72, height: 92 },
-  { name: 'mimikyu-busted', width: 85, height: 51 },
+  { name: 'mew', width_w: 40, height_w: 64 , width_i: 32, height_i: 56},
+  { name: 'mimikyu', width: 32, height: 48 },
+  { name: 'mimikyu-busted', width: 32, height: 32 },
   { name: 'pachirisu', width: 40, height: 56 },
   { name: 'pichu', width: 32, height: 48 },
-  { name: 'pikachu', width: 32, height: 40 },
-  { name: 'piplup', width: 24, height: 32 },
+  { name: 'pikachu', width_w: 32, height_w: 40 , width_i:25, height_i: 48},
+  { name: 'piplup', width: 24, height_w: 32, height_i: 40 },
+  { name: 'prinplup', width: 24, height_w: 40, height_i: 48 },
   { name: 'porygon', width: 32, height: 40 },  
   { name: 'torchic', width: 24, height_w: 32 ,height_i:40},
-  { name: 'victini', width: 53, height: 73 },  
+  { name: 'victini', width: 24, height: 48 },  
 ];
 
 export function preloadAssets(scene) {
@@ -32,11 +34,11 @@ export function preloadAssets(scene) {
   
   scene.load.image(`${pokemon.name}-icon`, `image/ingame/pokemon-icon/${pokemon.name}.png`);
   scene.load.spritesheet(`${pokemon.name}_w`, `image/ingame/pokemon-spritesheet/walk/${pokemon.name}-walk-spritesheet.png`, {
-    frameWidth: pokemon.width,
+    frameWidth: pokemon.width || pokemon.width_w,
     frameHeight: pokemon.height || pokemon.height_w,
   });
   scene.load.spritesheet(`${pokemon.name}_i`, `image/ingame/pokemon-spritesheet/idle/${pokemon.name}-idle-spritesheet.png`, {
-    frameWidth: pokemon.width,
+    frameWidth: pokemon.width || pokemon.width_i,
     frameHeight: pokemon.height || pokemon.height_i,
   });
 });

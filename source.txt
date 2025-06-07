@@ -1,1 +1,2 @@
-https://sprites.pmdcollab.org/ -> 포켓몬 스프라이트 모음
+https://sprites.pmdcollab.org/ -> 포켓몬 팔방향 이동 스프라이트 모음
+https://msikma.github.io/pokesprite/overview/dex-gen8.html -> 포켓몬 도감 스프라이트 모음

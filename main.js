@@ -88,7 +88,7 @@ function create() {
   
 
   player = this.physics.add.sprite(600, 600, 'pichu');
-  player.anims.play('pichu');
+  
   player.setScale(2.5);
   player.setSize(12, 16);
   player.setFlipX(true);
@@ -1129,7 +1129,7 @@ function updatePlayerAnim(player, vx, vy) {
   if (vx === 0 && vy === 0) {
     if (player.lastDirIndex !== undefined) {
       
-    player.setFrame(player.lastDirIndex*8);
+    player.setFrame(player.lastDirIndex*pokemonMap[selectedPokemon].frame_w);
     player.anims.stop();
     return;
     }
@@ -1399,7 +1399,7 @@ function updateWalletWithAvoids(avoid_num) {
 
 
 
-let unlockedPokemon = JSON.parse('["pichu", "torchic"]'); //localStorage.getItem('unlockedPokemon') || 
+let unlockedPokemon = JSON.parse('["pichu"]')//, "torchic", "darkrai","celebi", "ho-oh", "emolga", "mew", "pachirisu", "mimikyu", "pikachu", "porygon", "piplup", "prinplup", "empoleon", "victini"]'); //localStorage.getItem('unlockedPokemon') || 
 
 
 async function loadPokemonList(unlockedPokemon = []) {
@@ -1424,7 +1424,7 @@ async function loadPokemonList(unlockedPokemon = []) {
 
 
 
-let ownedPokemon = JSON.parse('["pichu", "torchic"]'); //localStorage.getItem('ownedPokemon') || 
+let ownedPokemon = JSON.parse('["pichu"]')//, "torchic", "darkrai", "celebi", "ho-oh", "emolga", "mew", "pachirisu", "mimikyu", "pikachu", "porygon", "piplup", "prinplup", "empoleon", "victini"]'); //localStorage.getItem('ownedPokemon') || 
 let selectedPokemon = 'pichu'; //localStorage.getItem('selectedPokemon') || 
 
 
@@ -1495,37 +1495,40 @@ function createPokemonUI(scene) {
   ,Drawbtn1
   ]);
   // 상단 포켓몬 정보 박스
-  const infoBox = scene.add.container(0, -300);
-  const infoBG = scene.add.rectangle(0, 50, 1000, 500, 0xffffff).setStrokeStyle(4, 0x000);
-  const infoPokemonBoxBG = scene.add.rectangle(0, 25, 150, 150).setStrokeStyle(2, 0x000);
-  const infoText = scene.add.text(0, -150, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0.5);
-  const infoImage = scene.add.sprite(0, 25, 'pichu_i').setScale(2.2);
+  const infoBox = scene.add.container(-340, -250);
+  const infoBG = scene.add.rectangle(0, 0, 440, 500, 0xffffff).setStrokeStyle(4, 0x000);
+  const infoPokemonBoxBG = scene.add.rectangle(0, 0, 150, 150).setStrokeStyle(2, 0x000);
+  const infoNum = scene.add.text(-200, -220, 'No.0025', { fontSize: '32px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
+  const infoGrade = scene.add.text(200, -220, 'EVENT', { fontSize: '32px', color: '#000', fontFamily: 'GSC' }).setOrigin(1,0.5);
+  
+  const infoText = scene.add.text(-200, 150, '피츄', { fontSize: '48px', color: '#000', fontFamily: 'GSC' }).setOrigin(0,0.5);
+  const infoImage = scene.add.sprite(0, 35, 'pichu_i').setScale(2.2);
   infoImage.anims.play('pichu_idle');
   const actionButton = scene.add.text(0, 220, '선택됨', { fontSize: '48px',  fontFamily: 'GSC', backgroundColor: '#333', color: '#fff', padding: 10 })
     .setInteractive().setOrigin(0.5);
 
-  infoBox.add([infoBG, infoText, infoPokemonBoxBG,infoImage, actionButton ]);
+  infoBox.add([infoBG, infoNum, infoGrade, infoText, infoPokemonBoxBG,infoImage, actionButton ]);
 
   // 하단 포켓몬 박스 (5x2)
-  const boxContainer = scene.add.container(0, 150);
-  const cols = 5, rows = 2, spacing = 180;
+  const boxContainer = scene.add.container(-80, -500);
+  const boxContainerBG = scene.add.rectangle(0, 0, 640, 800, 0xffffff).setStrokeStyle(4, 0x000).setOrigin(0);
+  boxContainer.add([boxContainerBG]);
+  const cols = 8, rows = 2, spacing = 80;
   scene.pokeimage = {}
   scene.pokelock = {}
   pokemonList.forEach((poke, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const x = (col - 2) * spacing;
+    const x = col * spacing;
     const y = row * spacing;
 
-    const boxBG = scene.add.rectangle(x, y, 150, 150, 0xffffff).setStrokeStyle(2, 0x000);
-    const image = scene.add.image(x, y-20, `${poke.id}-icon`).setScale(3);
+    const boxBG = scene.add.rectangle(x+40, y+40, 80, 80, 0xffffff).setStrokeStyle(2, 0x000);
+    const image = scene.add.image(x+40, y+20, `${poke.id}-icon`).setScale(2.2*pokemonMap[poke.id].boxScale || 2.2);
     
     scene.pokeimage[poke.id] = image;
     if (!unlockedPokemon.includes(poke.id)) {
-      const lock = scene.add.text(x, y, '?', { fontSize: '42px', color:'#ffffff' }).setOrigin(0.5);
-      scene.pokelock[poke.id] = lock;
       image.setTint(0x000000);
-      boxContainer.add([boxBG, image, lock]);
+      boxContainer.add([boxBG, image]);
     } else {
       boxContainer.add([boxBG, image]);
     }
@@ -1541,6 +1544,7 @@ function createPokemonUI(scene) {
     infoText.setText(poke.name);
     infoImage.stop();
     infoImage.setTexture(`${poke.id}_i`, poke.frame || 1);
+    
     if (unlockedPokemon.includes(poke.id)) {
       infoImage.clearTint();
 
@@ -1564,8 +1568,11 @@ function createPokemonUI(scene) {
       actionButton.removeAllListeners();
       actionButton.setInteractive().on('pointerdown', () => {
         selectedPokemon = poke.id;
-        player.setTexture = `${poke.id}_w`
-
+        player.setTexture(`${poke.id}_w`)
+        player.setScale(pokemonMap[selectedPokemon].scale);
+        player.setSize(pokemonMap[selectedPokemon].size_w, pokemonMap[selectedPokemon].size_h);
+        player.setFlipX(true);
+        player.setOffset(pokemonMap[selectedPokemon].offset_x,pokemonMap[selectedPokemon].offset_y);
       if (!createdAnimations.has(`${poke.id}_w`)){
         createPokeAnimations(scene ,poke.id, 'walk');
         createdAnimations.add(`${poke.id}_w`);
@@ -1627,16 +1634,16 @@ const drawRates = {
     { type: 'special', rate: 0.01 },
   ],
   super: [
-    { type: '스타팅', rate: 0.9 },
-    { type: '스페셜', rate: 0.09 },
-    { type: '전설', rate: 0.01 },
+    { type: 'starting', rate: 0.9 },
+    { type: 'special', rate: 0.09 },
+    { type: 'legend', rate: 0.01 },
   ],
   hyper: [
-    { type: '스페셜', rate: 0.9 },
-    { type: '전설', rate: 0.1 },
+    { type: 'special', rate: 0.9 },
+    { type: 'legend', rate: 0.1 },
   ],
   legend: [
-    { type: '전설', rate: 1.0 },
+    { type: 'legend', rate: 1.0 },
   ]
 };
 
@@ -1675,7 +1682,8 @@ function drawPokemon(drawType) {
   }
 
   const candidates = pokemonList.filter(p =>
-    p.grade === chosenType
+    p.grade === chosenType &&
+    p.prev == undefined
   );
 
   if (candidates.length === 0) {
@@ -1750,9 +1758,9 @@ function createPokeAnimations(scene, pokeId, type){
       key: `${pokeId}_idle`,
       frames: scene.anims.generateFrameNumbers(`${pokeId}_i`, {
         start:0,
-        end:pokemonMap[pokeId].frame_i*8 - 1
+        end:pokemonMap[pokeId].frame_i - 1
       }),
-      frameRate: 10,
+      frameRate: 5,
       repeat: -1,
     })
   }
@@ -1831,8 +1839,8 @@ function updateStat(stat, result) {
   stat.totalAvoid_m += result.avoid_num['masterball'];
   stat.best = Math.max(stat.best, result.time);
 
-  const pokedexMap = {'172': 'pichu' }
-  const p = stat.perPokemon[pokedexMap[result.pokedex]];
+  
+  const p = stat.perPokemon[selectedPokemon];
   if (p) {
     p.best = Math.max(p.best, result.time);
     p.playCount += 1;
