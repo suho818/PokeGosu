@@ -247,7 +247,7 @@ function create() {
     showSetupUI(this);
   });
 
-  const version = this.add.text(20, 1140, "v0.8.0", {
+  const version = this.add.text(20, 1140, "v0.8.1", {
     fontFamily: 'GSC',
     fontSize: '40px',
     color: '#000',
@@ -1120,7 +1120,7 @@ function movePlayer(scene) {
   function getDirectionIndex(vx, vy) {
   const angle = Math.atan2(vy, vx); // -PI ~ PI
   const deg = Phaser.Math.RadToDeg(angle); // -180 ~ 180
-
+  
   // 8방향 나누기 (각 방향은 45도 간격)
   const adjusted = (deg + 630 + 22.5) % 360; // 0~360, 중심 맞추기
   return Math.floor(adjusted / 45); // 0~7
@@ -1129,7 +1129,7 @@ function updatePlayerAnim(player, vx, vy) {
   
   if (vx === 0 && vy === 0) {
     if (player.lastDirIndex !== undefined) {
-      
+    
     player.setFrame(player.lastDirIndex*pokemonMap[selectedPokemon].frame_w);
     player.anims.stop();
     return;
@@ -1137,7 +1137,14 @@ function updatePlayerAnim(player, vx, vy) {
   }
 
   const dirIndex = getDirectionIndex(vx, vy);
-  player.lastDirIndex = dirIndex;
+  
+  if (player.lastDirIndex != undefined)
+  {  
+    player.lastDirIndex = dirIndex;
+  }
+  else{
+    player.lastDirIndex = 0;
+  }
   console.log(player.lastDirIndex);
   const animKey = `${selectedPokemon}_walk_${dirIndex}`;
 

@@ -3,7 +3,7 @@
   { "id": "porygon", "name": "폴리곤", "pokedex" : 137, "grade": "일반", "frame_w": 4, "frame_i": 4, "scale": 2.5, "size_w":12, "size_h":16, "offset_x": 12, "offset_y": 16},
   { "id": "mew", "name": "뮤", "pokedex" : 151, "grade": "환상", "frame_w": 6, "frame_i": 4, "scale": 2.5, "size_w":12, "size_h":16, "offset_x": 12, "offset_y": 16},
   { "id": "pichu", "name": "피츄", "pokedex": 172, "grade": "스페셜", "frame_w": 8,"frame_i": 4, "scale": 2.5, "size_w":12, "size_h":16, "offset_x": 12, "offset_y": 16},
-  { "id": "ho-oh","name": "칠색조", "pokedex": 250, "grade": "전설", "frame_w": 5,"frame_i": 5, "scale": 2.5, "size_w":50, "size_h":14, "offset_x": 15, "offset_y": 30},
+  { "id": "ho-oh","name": "칠색조", "pokedex": 250, "grade": "전설", "frame_w": 5,"frame_i": 5, "scale": 2, "size_w":50, "size_h":14, "offset_x": 15, "offset_y": 30},
   { "id": "celebi","name": "세레비", "pokedex": 251, "grade": "환상", "frame_w": 8,"frame_i": 6, "scale": 2.5, "size_w":13, "size_h":14, "offset_x": 6, "offset_y": 8},
   { "id": "torchic","name": "아차모", "pokedex": 255, "grade": "스타팅", "frame_w": 4,"frame_i": 5, "scale": 2.5, "size_w":13, "size_h":14, "offset_x": 6, "offset_y": 8},
   { "id": "piplup", "name": "팽도리", "pokedex": 393, "grade": "스타팅", "frame_w": 4,"frame_i": 6, "scale": 2.5, "size_w":13, "size_h":14, "offset_x": 6, "offset_y": 8},
